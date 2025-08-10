@@ -8,3 +8,10 @@ class TravelQuery (BaseModel):
     traveler_type: Optional[Literal['family', 'couple', 'friends', 'solo']] = Field(description="The kind of people user is travelling with")
     interests: Optional[str] = Field(description="The kind of activities user is interested in.")
     budget: Optional[str] = Field(description="User's budget for the trip")
+    departure_date: Optional[str] = Field(description="When to start the trip (YYYY-MM-DD format)")
+    origin: Optional[str] = Field(description="Departure city / airport code")
+
+class ToolResponse (BaseModel):
+    tools_name: str
+    data: dict
+    error: Optional[str] = None
