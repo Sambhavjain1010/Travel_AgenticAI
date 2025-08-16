@@ -1,19 +1,19 @@
 # api calling not working for visa requirements and safety ratings, I can use web scraping for that
-
 import requests
 from bs4 import BeautifulSoup
-import time
-import random
-from typing import Dict, List, Optional, Any
-import re
+import os
 import json
+import time
+from typing import Dict, Any
+from models.llm_generator import build_llm
+from data.visa_data_class import ExtractedVisaInfo
 from selenium import webdriver
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-class WebScrapper:
+class LLMWebScrapper:
     def __init__(self):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
@@ -21,12 +21,13 @@ class WebScrapper:
 
         self.session = requests.Session()
         self.session.headers.update(self.headers)
-
-        self.driver = webdriver.Chrome()
+        self.llm = build_llm()
+        self.structured_visa_llm = self.llm.with_structured_output(ExtractedVisaInfo)
         self.chrome_options = webdriver.ChromeOptions()
         self.chrome_options.add_argument('--headless')
         self.chrome_options.add_argument('--no-sandbox')
         self.chrome_options.add_argument('--disable-dev-shm-usage')
+        self.chrome_options.add_argument(f"user-agent={self.headers['User-Agent']}")
     
     def scrape_visa_requirements(self, destination_country: str, passport_country: str = "India") -> Dict[str, Any]:
         
@@ -38,19 +39,13 @@ class WebScrapper:
                 'source': 'visa_index',
                 'data': visa_index_data
             })
-        ivisa_data = self.scrape_ivisa(destination_country, passport_country)
-        if ivisa_data and 'error' not in ivisa_data:
+        interactive_visa_data = self.check_visa_requirements(destination_country, passport_country)        
+        if interactive_visa_data and 'error' not in interactive_visa_data:
             source_data.append({
-                'source': 'ivisa',
-                'data': ivisa_data
+                'source': 'visa_index',
+                'data': interactive_visa_data
             })
-        government_data = self.scrape_government_visa(destination_country, passport_country)
-        if government_data and 'error' not in government_data:
-            source_data.append({
-                'source': 'government',
-                'data': government_data
-            })
-        
+
         return {
             'destination_country': destination_country,
             'passport_country': passport_country,
@@ -61,14 +56,71 @@ class WebScrapper:
 
     def scrape_visa_index (self, destination_country: str, passport_country: str) -> Dict[str, Any]:
         """Scrapes visa requirements from Visa Index"""
-
+        output_dir = "scraped_data"
+        os.makedirs(output_dir, exist_ok=True)
+        filename = f"{output_dir}/visa_requirements.json"
         try:
-            url = f"https://visaindex.com/visa/{destination_country}-visa/"
+            if destination_country == "United Kingdom":
+                destination_country = "uk"
+            elif destination_country in ("United States", "United States of America"):
+                destination_country = "us"
+            else:
+                country_slug = destination_country.lower().replace(" ", "-")
+
+            url = f"https://visaindex.com/visa/{country_slug}-visa/"
             response = self.session.get(url, timeout=15)
             response.raise_for_status()
 
             soup = BeautifulSoup(response.text, 'html.parser')
+            visa_info = self.structured_visa_llm.invoke(soup.text)
+            visa_info_dict = dict(visa_info)
+
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(visa_info_dict, f, ensure_ascii=False, indent=4)  
+
+            return visa_info_dict
+        
+        except Exception as e:
+            print(f"ERROR in scrape_visa_index: {e}")
+            return {'error': f'VisaIndex scraping failed {str(e)}'}
+    
+    def check_visa_requirements(self, destination_country: str, passport_country: str) -> Dict[str, Any]:
+
+        driver = webdriver.Chrome(options=self.chrome_options)
+        try:
+            url = f"https://visaindex.com/"
+            driver.get(url)
+            wait = WebDriverWait(driver, 10)
+            try: 
+                initial_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Accept All')]")))
+                initial_button.click()
+            except Exception as e:
+                print(f"ERROR in check_visa_requirements: {e}")
+                print("Initial pop-up button not found or not needed.")
+
+            passport_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "passport_to")))
+            select_passport = Select(passport_dropdown)
+            select_passport.select_by_visible_text(passport_country)
+
+            destination_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "passport_from")))
+            select_destination = Select(destination_dropdown)
+            select_destination.select_by_visible_text(destination_country)
+
+            submit_button = driver.find_element(By.XPATH, "/html/body/div[4]/div/div[2]/div[3]/button")
+            submit_button.click()
+
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.visa-requirements-result")))
             
-            visa_info = {
-                'visa_free_score': 
-            }
+            visa_page_source = driver.page_source
+            soup = BeautifulSoup(visa_page_source, 'html.parser')
+
+            main_content = soup.find('div', class_='visa-requirements-result')
+            content_text = main_content.get_text(separator='\n', strip=True) if main_content else soup.get_text(separator='\n', strip=True)
+
+            visa_info = self.structured_visa_llm.invoke(content_text)
+            return visa_info.dict()
+        except Exception as e:
+            print(f"ERROR in check_visa_requirements: {e}")
+            return {'error': f'VisaIndex (interactive) scraping failed: {str(e)}'}
+        finally:
+            driver.quit()

@@ -1,6 +1,6 @@
 import streamlit as st
 from inputs.prompt_input import build_prompt
-from agents.input_parser import TravelQuery
+from data.input_parser import TravelQuery
 from models.llm_generator import build_llm
 from langchain_core.output_parsers import StrOutputParser
 

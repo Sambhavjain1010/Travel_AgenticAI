@@ -1,4 +1,5 @@
 from tools.api_caller import APICaller
+from tools.web_scrapper import LLMWebScrapper
 
 api = APICaller()
 
@@ -6,14 +7,12 @@ api = APICaller()
 # weather_data = api.get_weather_forecast("Delhi")
 # print ("weather Data: ", weather_data)
 
-# print("Visa api")
-# visa_data = api.get_visa_info("India", "UK")
-# print("Visa Data:", visa_data)
+# print("flight API")
+# flight_data = api.find_flights("DEL", "LHR")
+# print("flight data:", flight_data)
 
-# print("Safety API")
-# safety_data = api.get_safety_index("Barcelona")
-# print("safety data:", safety_data)
+print("\nVisa Scraper")
+scraper = LLMWebScrapper()
+visa_data = scraper.scrape_visa_requirements(destination_country="United Kingdom", passport_country="India")
 
-print("flight API")
-flight_data = api.find_flights("DEL", "LHR")
-print("flight data:", flight_data)
+print("Visa Data:", visa_data)
