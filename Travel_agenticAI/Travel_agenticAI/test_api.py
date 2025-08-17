@@ -11,8 +11,9 @@ api = APICaller()
 # flight_data = api.find_flights("DEL", "LHR")
 # print("flight data:", flight_data)
 
-print("\nVisa Scraper")
-scraper = LLMWebScrapper()
-visa_data = scraper.scrape_visa_requirements(destination_country="United Kingdom", passport_country="India")
+# print("\nVisa Scraper")
+# scraper = LLMWebScrapper()
+# visa_data = scraper.scrape_visa_requirements(destination_country="United Kingdom", passport_country="India")
 
-print("Visa Data:", visa_data)
+# print("Visa Data:", visa_data)
+

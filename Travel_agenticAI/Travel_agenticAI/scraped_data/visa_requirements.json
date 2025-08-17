@@ -1,0 +1,23 @@
+{
+    "destination_country": "United Kingdom",
+    "passport_country": "India",
+    "visa_requirement": {
+        "visa_type": "visa_required",
+        "max_stay_days": null,
+        "processing_time": null,
+        "validity_period": null,
+        "cost": null,
+        "requirements": [
+            "Valid passport",
+            "Visa application form (online)",
+            "Proof of payment"
+        ]
+    },
+    "special_notes": [
+        "Visa required for Indian passport holders, regardless of purpose of travel or transit"
+    ],
+    "reciprocity_info": null,
+    "embassy_info": null,
+    "last_updated": null,
+    "confidence_level": 0.9
+}

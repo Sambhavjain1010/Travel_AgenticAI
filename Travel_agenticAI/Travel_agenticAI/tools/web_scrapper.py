@@ -23,12 +23,22 @@ class LLMWebScrapper:
         self.session.headers.update(self.headers)
         self.llm = build_llm()
         self.structured_visa_llm = self.llm.with_structured_output(ExtractedVisaInfo)
+
         self.chrome_options = webdriver.ChromeOptions()
         self.chrome_options.add_argument('--headless')
         self.chrome_options.add_argument('--no-sandbox')
         self.chrome_options.add_argument('--disable-dev-shm-usage')
+        self.chrome_options.add_argument('--disable-gpu')
+        self.chrome_options.add_argument('--disable-extensions')
+        self.chrome_options.add_argument('--disable-logging')
+        # self.chrome_options.add_argument('--start-maximized')
+        self.chrome_options.add_argument('--disable-web-security')
+        self.chrome_options.add_argument('--allow-running-insecure-content')
         self.chrome_options.add_argument(f"user-agent={self.headers['User-Agent']}")
+        self.chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        self.chrome_options.add_experimental_option('useAutomationExtension', False)
     
+    # Main callable function that inturn calls the other 2 functions
     def scrape_visa_requirements(self, destination_country: str, passport_country: str = "India") -> Dict[str, Any]:
         
         source_data = []
@@ -36,13 +46,13 @@ class LLMWebScrapper:
         visa_index_data = self.scrape_visa_index(destination_country, passport_country)
         if visa_index_data and 'error' not in visa_index_data:
             source_data.append({
-                'source': 'visa_index',
+                'source': 'visa_index_static',
                 'data': visa_index_data
             })
         interactive_visa_data = self.check_visa_requirements(destination_country, passport_country)        
         if interactive_visa_data and 'error' not in interactive_visa_data:
             source_data.append({
-                'source': 'visa_index',
+                'source': 'visa_index_interactive',
                 'data': interactive_visa_data
             })
 
@@ -55,15 +65,19 @@ class LLMWebScrapper:
         }
 
     def scrape_visa_index (self, destination_country: str, passport_country: str) -> Dict[str, Any]:
-        """Scrapes visa requirements from Visa Index"""
+        
         output_dir = "scraped_data"
         os.makedirs(output_dir, exist_ok=True)
         filename = f"{output_dir}/visa_requirements.json"
+        
         try:
-            if destination_country == "United Kingdom":
-                destination_country = "uk"
-            elif destination_country in ("United States", "United States of America"):
-                destination_country = "us"
+            country_slug = None
+            if destination_country.lower() in ["united kingdom", "uk", "britain"]:
+                country_slug = "uk"
+            elif destination_country.lower() in ["united states", "united states of america", "usa", "us"]:
+                country_slug = "us"
+            elif destination_country.lower() in ["united arab emirates", "uae"]:
+                country_slug = "uae"
             else:
                 country_slug = destination_country.lower().replace(" ", "-")
 
@@ -72,9 +86,27 @@ class LLMWebScrapper:
             response.raise_for_status()
 
             soup = BeautifulSoup(response.text, 'html.parser')
-            visa_info = self.structured_visa_llm.invoke(soup.text)
-            visa_info_dict = dict(visa_info)
+            for element in soup(['script', 'style', 'nav', 'footer']):
+                element.decompose()
+            
+            page_content = soup.get_text(separator='\n', strip=True)
+            # if len(page_content) > 8000:
+            #     page_content = page_content[:8000] + "\n... [content truncated]"
 
+            print("Processing content with LLM...")
+            visa_info = self.structured_visa_llm.invoke(f"""
+            Extract visa requirement information for {passport_country} citizens traveling to {destination_country} from this webpage content:
+            
+            {page_content}
+            
+            Focus on:
+            - Visa requirement type (visa free, visa on arrival, e-visa, visa required)
+            - Maximum stay duration
+            - Processing time and requirements
+            - Any special conditions or restrictions
+            """)
+
+            visa_info_dict = visa_info.dict() if hasattr(visa_info, 'dict') else dict(visa_info)
             with open(filename, 'w', encoding='utf-8') as f:
                 json.dump(visa_info_dict, f, ensure_ascii=False, indent=4)  
 
@@ -87,12 +119,13 @@ class LLMWebScrapper:
     def check_visa_requirements(self, destination_country: str, passport_country: str) -> Dict[str, Any]:
 
         driver = webdriver.Chrome(options=self.chrome_options)
+        
         try:
             url = f"https://visaindex.com/"
             driver.get(url)
             wait = WebDriverWait(driver, 10)
             try: 
-                initial_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Accept All')]")))
+                initial_button = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/div/div[2]/button")))
                 initial_button.click()
             except Exception as e:
                 print(f"ERROR in check_visa_requirements: {e}")
@@ -109,15 +142,25 @@ class LLMWebScrapper:
             submit_button = driver.find_element(By.XPATH, "/html/body/div[4]/div/div[2]/div[3]/button")
             submit_button.click()
 
-            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.visa-requirements-result")))
-            
+            time.sleep(8)
+
             visa_page_source = driver.page_source
             soup = BeautifulSoup(visa_page_source, 'html.parser')
 
-            main_content = soup.find('div', class_='visa-requirements-result')
-            content_text = main_content.get_text(separator='\n', strip=True) if main_content else soup.get_text(separator='\n', strip=True)
+            for element in soup(['script', 'style', 'nav', 'footer', 'header']):
+                element.decompose()
+        
+            content_text = soup.get_text(separator='\n', strip=True)
+            
+            # Limit for LLM
+            # if len(content_text) > 8000:
+            #     content_text = content_text[:8000] + "\n... [content truncated]"
 
-            visa_info = self.structured_visa_llm.invoke(content_text)
+            visa_info = self.structured_visa_llm.invoke(f"""
+            Extract visa requirement information for {passport_country} citizens traveling to {destination_country} from this webpage:
+            {content_text}
+            """)
+            
             return visa_info.dict()
         except Exception as e:
             print(f"ERROR in check_visa_requirements: {e}")
