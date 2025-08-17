@@ -16,7 +16,7 @@ from geopy.geocoders import Nominatim
 
 class LLMWebScrapper:
 
-    def city_to_country(city: str) -> str:
+    def city_to_country(self, city: str) -> str:
         geolocator = Nominatim(user_agent="my_travel_agent")
         location = geolocator.geocode(city, addressdetails=True, language='en')
         if location and 'country' in location.raw['address']:
@@ -81,7 +81,7 @@ class LLMWebScrapper:
         
         try:
             dest_input = destination_country.strip()
-            dest_country = self._city_to_country(dest_input)
+            dest_country = self.city_to_country(dest_input)
             
             country_slug = None
             if dest_country.lower() in ["united kingdom", "uk", "britain"]:

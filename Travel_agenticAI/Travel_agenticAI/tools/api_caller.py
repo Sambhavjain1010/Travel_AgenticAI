@@ -198,45 +198,6 @@ class APICaller:
                 'routes': []
             }
         
-    def get_airport_info(self, airport_code: str) -> Dict[str, Any]:
-        """Get airport information using AviationStack"""
-        try:
-            url = f"{self.aviationstack_api_endpoint}/airports"
-            
-            params = {
-                'access_key': self.aviationstack_api_key,
-                'search': airport_code
-            }
-            
-            response = requests.get(url, params=params)
-            response.raise_for_status()
-            
-            data = response.json()
-            
-            if not data.get('data'):
-                return {
-                    'airport_code': airport_code,
-                    'error': 'Airport not found'
-                }
-            
-            airport = data['data'][0]
-            return {
-                'airport_code': airport_code,
-                'name': airport.get('airport_name', 'N/A'),
-                'iata_code': airport.get('iata_code', 'N/A'),
-                'icao_code': airport.get('icao_code', 'N/A'),
-                'country': airport.get('country_name', 'N/A'),
-                'city': airport.get('city_name', 'N/A'),
-                'timezone': airport.get('timezone', 'N/A'),
-                'latitude': airport.get('latitude', 'N/A'),
-                'longitude': airport.get('longitude', 'N/A')
-            }
-        except Exception as e:
-            return {
-                'airport_code': airport_code,
-                'error': f"Could not fetch airport info: {str(e)}"
-            }
-    
     def get_iata_codes(self, place: str, country: str = None, max_results: int = 3) -> list:
         url = f"{self.aviationstack_api_endpoint}/airports"
         params = {
@@ -276,7 +237,7 @@ class APICaller:
             return []
         
     def get_main_iata_for_place(self, place, country=None):
-        airports = self.get_iata_codes_for_place(place, country)
+        airports = self.get_iata_codes(place, country)
         if airports:
             # Default: pick first (most likely the main airport)
             return airports[0]['iata_code']

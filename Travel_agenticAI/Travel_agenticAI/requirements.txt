@@ -6,6 +6,7 @@ python-dotenv
 requests
 beautifulsoup4
 aiohttp
+selenium
 pydantic
 geopy
 airports-py
