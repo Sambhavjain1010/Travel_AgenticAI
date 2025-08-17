@@ -12,8 +12,17 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from geopy.geocoders import Nominatim
 
 class LLMWebScrapper:
+
+    def city_to_country(city: str) -> str:
+        geolocator = Nominatim(user_agent="my_travel_agent")
+        location = geolocator.geocode(city, addressdetails=True, language='en')
+        if location and 'country' in location.raw['address']:
+            return location.raw['address']['country']
+        return city
+
     def __init__(self):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
@@ -71,15 +80,18 @@ class LLMWebScrapper:
         filename = f"{output_dir}/visa_requirements.json"
         
         try:
+            dest_input = destination_country.strip()
+            dest_country = self._city_to_country(dest_input)
+            
             country_slug = None
-            if destination_country.lower() in ["united kingdom", "uk", "britain"]:
+            if dest_country.lower() in ["united kingdom", "uk", "britain"]:
                 country_slug = "uk"
-            elif destination_country.lower() in ["united states", "united states of america", "usa", "us"]:
+            elif dest_country.lower() in ["united states", "united states of america", "usa", "us"]:
                 country_slug = "us"
-            elif destination_country.lower() in ["united arab emirates", "uae"]:
+            elif dest_country.lower() in ["united arab emirates", "uae"]:
                 country_slug = "uae"
             else:
-                country_slug = destination_country.lower().replace(" ", "-")
+                country_slug = dest_country.lower().replace(" ", "-")
 
             url = f"https://visaindex.com/visa/{country_slug}-visa/"
             response = self.session.get(url, timeout=15)

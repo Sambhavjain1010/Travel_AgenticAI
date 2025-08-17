@@ -20,17 +20,16 @@ def build_prompt():
         - Visa Requirements: {visa_info}
 
         Instructions:
-        Create a comprehensive and detailed travel itinerary based on customer's request and the real-time data available.
-        1. Pre-travel preperations: (visa requirements, weather considerations)
-        2. Transportation: (flight options if available)
-        3. Daily itinerary: tailored to their interests
-        4. Budget considerations: if budget not provided, provide 3 options:
+        Create a comprehensive and detailed travel itinerary based on customer's request and the real-time data available. Budget considerations: if budget not provided, provide 3 options:
                                 - Luxury experience
                                 - Mid-range experience
                                 - Budget experience
-        5. Practical tips: based on the weather and local conditions
+        1. Pre-travel preperations: (visa requirements, weather considerations)
+        2. Transportation: (flight options if available)
+        3. Daily itinerary: tailored to their interests
+        4. Practical tips: based on the weather and local conditions
 
-        use the real-time data to make specific, accurate recomendations. Be detailed and helpful
+        use the real-time data to make specific, accurate recomendations. Be detailed and
         """,
         input_variables=['duration', 'destination', 'traveler_type', 'interests', 'budget', 'departure_date', 'origin', 'weather_info', 'flight_info', 'visa_info']
     )

@@ -4,7 +4,7 @@ import json
 import os
 from typing import Dict, Optional, Any
 from datetime import datetime, timedelta
-import asyncio
+from airports import airport_data
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -236,27 +236,57 @@ class APICaller:
                 'airport_code': airport_code,
                 'error': f"Could not fetch airport info: {str(e)}"
             }
+    
+    def get_iata_codes(self, place: str, country: str = None, max_results: int = 3) -> list:
+        url = f"{self.aviationstack_api_endpoint}/airports"
+        params = {
+            'access_key': self.aviationstack_api_key,
+            'search': place
+        }
+
+        if country:
+            params['country_name'] = country
         
-    def _geocode_city(self, city: str) -> Optional[Dict[str, float]]:
-        """Helper function to get geocode of a city using OpenWeatherMap geocoding"""
-
         try:
-            url="http://api.openweathermap.org/geo/1.0/direct"
-            params = {
-                'q': city,
-                'limit': 1,
-                'appid': self.openweather_api_key
-            }
-
             response = requests.get(url, params=params)
             response.raise_for_status()
 
-            data = response.json()
-            if data:
-                return {
-                    'lat': data[0]['lat'],
-                    'lon': data[0]['lon']
-                }
-            return None
-        except:
-            return None
+            data = response.json().get("data", [])
+            airports = sorted(
+                [ap for ap in data if ap.get("iata_code")],
+                key=lambda ap: ("international" not in (ap.get("airport_name") or "").lower(), ap.get("airport_name") or "")
+            )
+            seen_iata = set()
+            top = []
+            for ap in airports:
+                code = ap["iata_code"]
+                if code not in seen_iata:
+                    seen_iata.add(code)
+                    top.append({
+                        "airport_name": ap.get("airport_name"),
+                        "iata_code": code,
+                        "city": ap.get("city_name"),
+                        "country": ap.get("country_name")
+                    })
+                if len(top) >= max_results:
+                    break
+            return top
+        except Exception as e:
+            print(f"[airport lookup] Error: {e}")
+            return []
+        
+    def get_main_iata_for_place(self, place, country=None):
+        airports = self.get_iata_codes_for_place(place, country)
+        if airports:
+            # Default: pick first (most likely the main airport)
+            return airports[0]['iata_code']
+        return None
+
+    def plan_flights(self, origin_place, dest_place, departure_date=None, return_date=None):
+        origin_code = self.get_main_iata_for_place(origin_place)
+        dest_code = self.get_main_iata_for_place(dest_place)
+        if not origin_code or not dest_code:
+            return {
+                "error": f"Could not resolve airport codes for '{origin_place}' or '{dest_place}'"
+            }
+        return self.find_flights(origin=origin_code, destination=dest_code, departure_date=departure_date, return_date=return_date)

@@ -27,7 +27,7 @@ if input_text:
         weather_data = api_caller.get_weather_forecast(travel_dict['destination'])
         flight_data = None
         if travel_dict.get('origin'):
-            flight_data = api_caller.find_flights(travel_dict.get('origin', 'India'), travel_dict['destination'])
+            flight_data = api_caller.plan_flights(travel_dict.get('origin', 'India'), travel_dict['destination'])
         # else:
         #     flight_data = api_caller.find_flights('India', travel_dict['destination'])
         visa_data = web_scrapper.scrape_visa_requirements(travel_dict['destination'], travel_dict.get('origin', 'India'))
