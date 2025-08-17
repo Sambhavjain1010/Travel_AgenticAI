@@ -40,6 +40,7 @@ if input_text:
             'budget': travel_dict.get('budget', 'not specified'),
             'departure_date': travel_dict.get('departure_date', 'flexible'),
             'origin': travel_dict.get('origin', 'India'),
+            'intent': travel_dict.get('intent', 'tourism'),
             'weather_info': weather_data,
             'flight_info': flight_data,
             'visa_info': visa_data

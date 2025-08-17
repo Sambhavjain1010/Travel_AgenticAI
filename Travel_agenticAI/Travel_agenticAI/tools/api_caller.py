@@ -276,7 +276,7 @@ class APICaller:
             return []
         
     def get_main_iata_for_place(self, place, country=None):
-        airports = self.get_iata_codes_for_place(place, country)
+        airports = self.get_iata_codes(place, country)
         if airports:
             # Default: pick first (most likely the main airport)
             return airports[0]['iata_code']

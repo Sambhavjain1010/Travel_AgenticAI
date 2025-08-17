@@ -1,4 +1,5 @@
 # api calling not working for visa requirements and safety ratings, I can use web scraping for that
+from fileinput import filename
 import requests
 from bs4 import BeautifulSoup
 import os
@@ -15,14 +16,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from geopy.geocoders import Nominatim
 
 class LLMWebScrapper:
-
-    def city_to_country(city: str) -> str:
-        geolocator = Nominatim(user_agent="my_travel_agent")
-        location = geolocator.geocode(city, addressdetails=True, language='en')
-        if location and 'country' in location.raw['address']:
-            return location.raw['address']['country']
-        return city
-
     def __init__(self):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
@@ -81,7 +74,7 @@ class LLMWebScrapper:
         
         try:
             dest_input = destination_country.strip()
-            dest_country = self._city_to_country(dest_input)
+            dest_country = self.city_to_country(dest_input)
             
             country_slug = None
             if dest_country.lower() in ["united kingdom", "uk", "britain"]:
@@ -102,8 +95,6 @@ class LLMWebScrapper:
                 element.decompose()
             
             page_content = soup.get_text(separator='\n', strip=True)
-            # if len(page_content) > 8000:
-            #     page_content = page_content[:8000] + "\n... [content truncated]"
 
             print("Processing content with LLM...")
             visa_info = self.structured_visa_llm.invoke(f"""
@@ -119,8 +110,9 @@ class LLMWebScrapper:
             """)
 
             visa_info_dict = visa_info.dict() if hasattr(visa_info, 'dict') else dict(visa_info)
-            with open(filename, 'w', encoding='utf-8') as f:
-                json.dump(visa_info_dict, f, ensure_ascii=False, indent=4)  
+            
+            country_key = dest_country
+            self.save_visa_info(filename, country_key, visa_info_dict)
 
             return visa_info_dict
         
@@ -163,10 +155,6 @@ class LLMWebScrapper:
                 element.decompose()
         
             content_text = soup.get_text(separator='\n', strip=True)
-            
-            # Limit for LLM
-            # if len(content_text) > 8000:
-            #     content_text = content_text[:8000] + "\n... [content truncated]"
 
             visa_info = self.structured_visa_llm.invoke(f"""
             Extract visa requirement information for {passport_country} citizens traveling to {destination_country} from this webpage:
@@ -179,3 +167,30 @@ class LLMWebScrapper:
             return {'error': f'VisaIndex (interactive) scraping failed: {str(e)}'}
         finally:
             driver.quit()
+
+    def save_visa_info(self, filename, country_key, visa_info_dict):
+
+        if os.path.exists(filename):
+            with open(filename, 'r', encoding='utf-8') as f:
+                try:
+                    data_cache = json.load(f)
+                except Exception:
+                    data_cache = {}
+        else:
+            data_cache = {}
+
+        country_key_lc = country_key.strip().lower()
+        if country_key_lc not in data_cache:
+            data_cache[country_key_lc] = visa_info_dict
+
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(data_cache, f, ensure_ascii=False, indent=4)
+        else:
+            print(f"Data for {country_key_lc} already present—no write needed.")
+
+    def city_to_country(self, city: str) -> str:
+        geolocator = Nominatim(user_agent="my_travel_agent")
+        location = geolocator.geocode(city, addressdetails=True, language='en')
+        if location and 'country' in location.raw['address']:
+            return location.raw['address']['country']
+        return city

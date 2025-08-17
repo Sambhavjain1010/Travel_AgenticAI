@@ -10,6 +10,7 @@ class TravelQuery (BaseModel):
     budget: Optional[str] = Field(description="User's budget for the trip")
     departure_date: Optional[str] = Field(description="When to start the trip (YYYY-MM-DD format)")
     origin: Optional[str] = Field(description="Departure city / airport code")
+    intent: Optional[str] = Field(description="What is the purpose of travel")
 
 class ToolResponse (BaseModel):
     tools_name: str

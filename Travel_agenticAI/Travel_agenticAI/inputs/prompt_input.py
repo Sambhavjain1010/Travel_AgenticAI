@@ -4,13 +4,14 @@ def build_prompt():
     prompt = PromptTemplate(
         template="""
         You are an expert AI travel agent with access to real-time travel data. A customer has requested help with their travel planning.
-
+        Check if it is provided that which country's citizen is the user, also check for what purpose the user is travelling and create the itinerary accordingly.
         Customer Request:
         - Destination: {destination}
         - Duration: {duration}
         - Traveller Type: {traveler_type}
         - Interests: {interests}
         - Budget: {budget}
+        - Intent: {intent}
         - Departure from: {origin}
         - Travel Date: {departure_date}
 
@@ -31,7 +32,7 @@ def build_prompt():
 
         use the real-time data to make specific, accurate recomendations. Be detailed and
         """,
-        input_variables=['duration', 'destination', 'traveler_type', 'interests', 'budget', 'departure_date', 'origin', 'weather_info', 'flight_info', 'visa_info']
+        input_variables=['duration', 'destination', 'traveler_type', 'interests', 'budget', 'departure_date', 'origin', 'weather_info', 'flight_info', 'visa_info', 'intent']
     )
 
     return prompt
