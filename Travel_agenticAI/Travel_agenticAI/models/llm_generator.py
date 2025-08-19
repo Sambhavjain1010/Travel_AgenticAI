@@ -16,5 +16,7 @@ def build_llm() :
         deployment_name="gpt-4o",
         temperature=1
     )
-    
+
     return llm
+
+    
