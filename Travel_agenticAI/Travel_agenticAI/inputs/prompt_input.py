@@ -4,7 +4,7 @@ def build_prompt():
     prompt = PromptTemplate(
         template="""
         You are an expert AI travel agent with access to real-time travel data. A customer has requested help with their travel planning.
-        Check if it is provided that which country's citizen is the user, also check for what purpose the user is travelling and create the itinerary accordingly.
+        Check if it is provided that which country's citizen is the user, also check for what purpose the user is travelling and create the itinerary accordingly. Keep the destination only to the main city or the country that the person is travelling to.
         Customer Request:
         - Destination: {destination}
         - Duration: {duration}

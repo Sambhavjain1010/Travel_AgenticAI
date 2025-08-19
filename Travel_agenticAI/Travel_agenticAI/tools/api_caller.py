@@ -4,7 +4,7 @@ import json
 import os
 from typing import Dict, Optional, Any
 from datetime import datetime, timedelta
-from airports import airport_data
+import airportsdata
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,6 +18,7 @@ class APICaller:
         self.openweather_api_key = os.getenv("OPENWEATHER_API_KEY")
         self.aviationstack_api_key = os.getenv("AVIATIONSTACK_API_KEY")
         self.aviationstack_api_endpoint = os.getenv("AVIATIONSTACK_API_ENDPOINT")
+        self.airports_iata = airportsdata.load('IATA')
 
     def get_weather_forecast(self, city:str, days:int = 5) -> Dict[str, Any]:
         """Get weather forecast for a city"""
@@ -198,89 +199,87 @@ class APICaller:
                 'routes': []
             }
         
-    def get_airport_info(self, airport_code: str) -> Dict[str, Any]:
-        """Get airport information using AviationStack"""
-        try:
-            url = f"{self.aviationstack_api_endpoint}/airports"
-            
-            params = {
-                'access_key': self.aviationstack_api_key,
-                'search': airport_code
-            }
-            
-            response = requests.get(url, params=params)
-            response.raise_for_status()
-            
-            data = response.json()
-            
-            if not data.get('data'):
-                return {
-                    'airport_code': airport_code,
-                    'error': 'Airport not found'
-                }
-            
-            airport = data['data'][0]
-            return {
-                'airport_code': airport_code,
-                'name': airport.get('airport_name', 'N/A'),
-                'iata_code': airport.get('iata_code', 'N/A'),
-                'icao_code': airport.get('icao_code', 'N/A'),
-                'country': airport.get('country_name', 'N/A'),
-                'city': airport.get('city_name', 'N/A'),
-                'timezone': airport.get('timezone', 'N/A'),
-                'latitude': airport.get('latitude', 'N/A'),
-                'longitude': airport.get('longitude', 'N/A')
-            }
-        except Exception as e:
-            return {
-                'airport_code': airport_code,
-                'error': f"Could not fetch airport info: {str(e)}"
-            }
-    
-    def get_iata_codes(self, place: str, country: str = None, max_results: int = 3) -> list:
-        url = f"{self.aviationstack_api_endpoint}/airports"
-        params = {
-            'access_key': self.aviationstack_api_key,
-            'search': place
-        }
-
-        if country:
-            params['country_name'] = country
+    def get_iata_codes_for_city(self, city: str, country: str = None, max_results: int = 3) -> list:
+        """Get IATA codes for a city using offline database"""
+        matching_airports = []
         
-        try:
-            response = requests.get(url, params=params)
-            response.raise_for_status()
-
-            data = response.json().get("data", [])
-            airports = sorted(
-                [ap for ap in data if ap.get("iata_code")],
-                key=lambda ap: ("international" not in (ap.get("airport_name") or "").lower(), ap.get("airport_name") or "")
-            )
-            seen_iata = set()
-            top = []
-            for ap in airports:
-                code = ap["iata_code"]
-                if code not in seen_iata:
-                    seen_iata.add(code)
-                    top.append({
-                        "airport_name": ap.get("airport_name"),
-                        "iata_code": code,
-                        "city": ap.get("city_name"),
-                        "country": ap.get("country_name")
-                    })
-                if len(top) >= max_results:
+        for iata_code, airport_data in self.airports_iata.items():
+            # Match by city name
+            if (city.lower() in airport_data.get('city', '').lower() or 
+                city.lower() in airport_data.get('name', '').lower()):
+                
+                # Filter by country if specified
+                if country and country.lower() != airport_data.get('country', '').lower():
+                    continue
+                
+                matching_airports.append({
+                    'airport_name': airport_data.get('name'),
+                    'iata_code': iata_code,
+                    'city': airport_data.get('city'),
+                    'country': airport_data.get('country')
+                })
+                
+                if len(matching_airports) >= max_results:
                     break
-            return top
-        except Exception as e:
-            print(f"[airport lookup] Error: {e}")
-            return []
         
-    def get_main_iata_for_place(self, place, country=None):
-        airports = self.get_iata_codes(place, country)
+        return matching_airports
+        
+    def get_main_iata_for_place(self, place: str, country=None):
+        """Get primary IATA code for a city or place"""
+        # Enhanced fallback mapping for major cities
+        CITY_TO_IATA = {
+            'delhi': 'DEL',
+            'new delhi': 'DEL',
+            'london': 'LHR',
+            'mumbai': 'BOM',
+            'chennai': 'MAA',
+            'bangalore': 'BLR',
+            'bengaluru': 'BLR',
+            'kolkata': 'CCU',
+            'paris': 'CDG',
+            'new york': 'JFK',
+            'los angeles': 'LAX',
+            'tokyo': 'NRT',
+            'dubai': 'DXB',
+            'singapore': 'SIN',
+            'hong kong': 'HKG',
+            'amsterdam': 'AMS',
+            'frankfurt': 'FRA',
+            'madrid': 'MAD',
+            'rome': 'FCO',
+            'sydney': 'SYD',
+            'melbourne': 'MEL',
+            'toronto': 'YYZ',
+            'vancouver': 'YVR',
+            'beijing': 'PEK',
+            'shanghai': 'PVG',
+            'seoul': 'ICN',
+            'bangkok': 'BKK',
+            'kuala lumpur': 'KUL',
+            'istanbul': 'IST',
+            'cairo': 'CAI',
+            'johannesburg': 'JNB',
+            'sao paulo': 'GRU',
+            'mexico city': 'MEX',
+            'montreal': 'YUL'
+        }
+        
+        place_lower = place.lower().strip()
+        
+        # Try fallback mapping first
+        if place_lower in CITY_TO_IATA:
+            print(f"📍 Using fallback: {place} -> {CITY_TO_IATA[place_lower]}")
+            return CITY_TO_IATA[place_lower]
+        
+        # Search in offline database
+        airports = self.get_iata_codes_for_city(place, country)  # FIXED: use correct method name
         if airports:
-            # Default: pick first (most likely the main airport)
-            return airports[0]['iata_code']
+            print(f"📍 Found from database: {place} -> {airports[0]['iata_code']}")
+            return airports['iata_code']  # FIXED: return the iata_code from the first airport
+        
+        print(f"❌ No IATA code found for: {place}")
         return None
+
 
     def plan_flights(self, origin_place, dest_place, departure_date=None, return_date=None):
         origin_code = self.get_main_iata_for_place(origin_place)

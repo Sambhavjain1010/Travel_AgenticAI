@@ -16,6 +16,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from geopy.geocoders import Nominatim
 
 class LLMWebScrapper:
+
     def __init__(self):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
@@ -44,14 +45,35 @@ class LLMWebScrapper:
     def scrape_visa_requirements(self, destination_country: str, passport_country: str = "India") -> Dict[str, Any]:
         
         source_data = []
+        filename = f"scraped_data/visa_requirements.json"
 
-        visa_index_data = self.scrape_visa_index(destination_country, passport_country)
+        # resolving the country name if the city name is given
+        dest_input = destination_country.strip()
+        dest_country = self.city_to_country(dest_input)
+        origin_country = self.city_to_country(passport_country.strip())
+
+        # checking the previously cached data
+        cached_data = self.load_visa_info_from_cache(filename, dest_country)
+        if cached_data:
+            return {
+            'destination_country': destination_country,
+            'passport_country': passport_country,
+            'sources': {
+                "source": 'cached_data',
+                'data': cached_data
+            },
+            'scraped_at': cached_data.get('cached_at', 'Unknown'),
+            'total_sources': len(source_data),
+            'cache_hit': True
+        }
+
+        visa_index_data = self.scrape_visa_index(dest_country, origin_country)
         if visa_index_data and 'error' not in visa_index_data:
             source_data.append({
                 'source': 'visa_index_static',
                 'data': visa_index_data
             })
-        interactive_visa_data = self.check_visa_requirements(destination_country, passport_country)        
+        interactive_visa_data = self.check_visa_requirements(dest_country, origin_country)
         if interactive_visa_data and 'error' not in interactive_visa_data:
             source_data.append({
                 'source': 'visa_index_interactive',
@@ -66,15 +88,13 @@ class LLMWebScrapper:
             'total_sources': len(source_data)
         }
 
-    def scrape_visa_index (self, destination_country: str, passport_country: str) -> Dict[str, Any]:
+    def scrape_visa_index (self, dest_country: str, origin_country: str) -> Dict[str, Any]:
         
         output_dir = "scraped_data"
         os.makedirs(output_dir, exist_ok=True)
         filename = f"{output_dir}/visa_requirements.json"
         
         try:
-            dest_input = destination_country.strip()
-            dest_country = self.city_to_country(dest_input)
             
             country_slug = None
             if dest_country.lower() in ["united kingdom", "uk", "britain"]:
@@ -98,7 +118,7 @@ class LLMWebScrapper:
 
             print("Processing content with LLM...")
             visa_info = self.structured_visa_llm.invoke(f"""
-            Extract visa requirement information for {passport_country} citizens traveling to {destination_country} from this webpage content:
+            Extract visa requirement information for {origin_country} citizens traveling to {dest_country} from this webpage content:
             
             {page_content}
             
@@ -120,7 +140,7 @@ class LLMWebScrapper:
             print(f"ERROR in scrape_visa_index: {e}")
             return {'error': f'VisaIndex scraping failed {str(e)}'}
     
-    def check_visa_requirements(self, destination_country: str, passport_country: str) -> Dict[str, Any]:
+    def check_visa_requirements(self, dest_country: str, origin_country: str) -> Dict[str, Any]:
 
         driver = webdriver.Chrome(options=self.chrome_options)
         
@@ -137,11 +157,11 @@ class LLMWebScrapper:
 
             passport_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "passport_to")))
             select_passport = Select(passport_dropdown)
-            select_passport.select_by_visible_text(passport_country)
+            select_passport.select_by_visible_text(origin_country)
 
             destination_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "passport_from")))
             select_destination = Select(destination_dropdown)
-            select_destination.select_by_visible_text(destination_country)
+            select_destination.select_by_visible_text(dest_country)
 
             submit_button = driver.find_element(By.XPATH, "/html/body/div[4]/div/div[2]/div[3]/button")
             submit_button.click()
@@ -157,7 +177,7 @@ class LLMWebScrapper:
             content_text = soup.get_text(separator='\n', strip=True)
 
             visa_info = self.structured_visa_llm.invoke(f"""
-            Extract visa requirement information for {passport_country} citizens traveling to {destination_country} from this webpage:
+            Extract visa requirement information for {origin_country} citizens traveling to {dest_country} from this webpage:
             {content_text}
             """)
             
@@ -188,9 +208,55 @@ class LLMWebScrapper:
         else:
             print(f"Data for {country_key_lc} already present—no write needed.")
 
-    def city_to_country(self, city: str) -> str:
+    def city_to_country(self, city_input: str) -> str:
         geolocator = Nominatim(user_agent="my_travel_agent")
-        location = geolocator.geocode(city, addressdetails=True, language='en')
-        if location and 'country' in location.raw['address']:
-            return location.raw['address']['country']
-        return city
+    
+    # Check if input contains multiple cities (comma-separated)
+        if ',' in city_input:
+            cities = [city.strip() for city in city_input.split(',')]
+            countries = []
+            
+            for city in cities:
+                location = geolocator.geocode(city, addressdetails=True, language='en')
+                if location and 'country' in location.raw['address']:
+                    country = location.raw['address']['country']
+                    countries.append(country)
+                else:
+                    countries.append(city)  # fallback to input city
+            
+            # Return the most common country (since all cities are in same country)
+            # Or return first country if all are the same
+            unique_countries = list(set(countries))
+            if len(unique_countries) == 1:
+                return unique_countries[0]
+            else:
+                # Multiple countries - return the first one or handle as needed
+                return unique_countries
+        
+        else:
+            # Single city - existing logic
+            location = geolocator.geocode(city_input, addressdetails=True, language='en')
+            if location and 'country' in location.raw['address']:
+                return location.raw['address']['country']
+            return city_input
+    
+    def load_visa_info_from_cache(self, filename, country_key):
+        """Load visa info from cache if it exists"""
+        if not os.path.exists(filename):
+            return None
+        
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                data_cache = json.load(f)
+            
+            country_key_lc = country_key.strip().lower()
+            
+            if country_key_lc in data_cache:
+                print(f"Found cached visa data for: {country_key}")
+                return data_cache[country_key_lc]
+            else:
+                return None
+                
+        except Exception as e:
+            print(f"Error reading cache: {e}")
+            return None
