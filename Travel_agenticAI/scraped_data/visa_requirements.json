@@ -53,5 +53,35 @@
         "embassy_info": "Visa applications need to be submitted to the nearest French embassy/consulate or authorized visa application center.",
         "last_updated": "October 2023",
         "confidence_level": 0.95
+    },
+    "spain": {
+        "destination_country": "Spain",
+        "passport_country": "India",
+        "visa_requirement": {
+            "visa_type": "visa_required",
+            "max_stay_days": 90,
+            "processing_time": "varies based on visa type and application completeness",
+            "validity_period": "depends on visa type",
+            "cost": "not specified",
+            "requirements": [
+                "passport with minimum 3 months validity beyond the planned stay",
+                "two recent passport-sized photos",
+                "filled visa application form",
+                "proof of funds (bank statements)",
+                "proof of accommodation",
+                "medical insurance (minimum coverage €30,000)",
+                "proof of travel itinerary",
+                "visa fee payment"
+            ]
+        },
+        "special_notes": [
+            "Visa can be single-entry or multiple-entry, depending on the intended travel needs",
+            "Submission of biometrics at the local consulate during the interview is required",
+            "Processing time can take several weeks; apply well in advance"
+        ],
+        "reciprocity_info": "None specified",
+        "embassy_info": "Visa applications are processed by the local Spanish embassy, consulate, or visa application center",
+        "last_updated": "2023-09-15",
+        "confidence_level": 0.9
     }
 }

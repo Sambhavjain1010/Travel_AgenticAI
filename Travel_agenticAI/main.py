@@ -25,12 +25,14 @@ if input_text:
         st.write("📊 Collecting real-time information...")
 
         weather_data = api_caller.get_weather_forecast(travel_dict['destination'])
+        
         flight_data = None
+        origin_country = travel_dict.get('origin') or 'India'
+
         if travel_dict.get('origin'):
-            flight_data = api_caller.plan_flights(travel_dict.get('origin', 'India'), travel_dict['destination'])
-        # else:
-        #     flight_data = api_caller.find_flights('India', travel_dict['destination'])
-        visa_data = web_scrapper.scrape_visa_requirements(travel_dict['destination'], travel_dict.get('origin', 'India'))
+            flight_data = api_caller.find_flights(origin_country, travel_dict['destination'])
+        
+        visa_data = web_scrapper.scrape_visa_requirements(travel_dict['destination'], origin_country)
 
         combined_data = {
             'duration': travel_dict.get('duration', 'flexible'),
@@ -39,8 +41,11 @@ if input_text:
             'interests': travel_dict.get('interests', 'tourism'),
             'budget': travel_dict.get('budget', 'not specified'),
             'departure_date': travel_dict.get('departure_date', 'flexible'),
-            'origin': travel_dict.get('origin', 'India'),
+            'origin': origin_country,
+            # --- Start of Corrected Block ---
+            # This line was missing. The prompt template needs an 'intent' variable.
             'intent': travel_dict.get('intent', 'tourism'),
+            # --- End of Corrected Block ---
             'weather_info': weather_data,
             'flight_info': flight_data,
             'visa_info': visa_data
