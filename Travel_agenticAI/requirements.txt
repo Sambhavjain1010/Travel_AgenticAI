@@ -10,3 +10,7 @@ selenium
 pydantic
 geopy
 airports-py
+chromadb 
+langchain-chroma 
+sentence-transformers
+googlesearch-python
