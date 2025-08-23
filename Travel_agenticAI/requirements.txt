@@ -1,0 +1,16 @@
+streamlit
+langchain
+langchain-openai
+langchain-community
+python-dotenv
+requests
+beautifulsoup4
+aiohttp
+selenium
+pydantic
+geopy
+airports-py
+chromadb 
+langchain-chroma 
+sentence-transformers
+googlesearch-python
