@@ -1,51 +1,45 @@
 import streamlit as st
-from tools.api_caller import APICaller
-from tools.web_scrapper import LLMWebScrapper
-from inputs.prompt_input import build_prompt
-from data.input_parser import TravelQuery
-from models.llm_generator import build_llm
-from langchain_core.output_parsers import StrOutputParser
+from agents.agent_orchestrator import create_agent
+from langchain_core.messages import HumanMessage, AIMessage
 
-llm = build_llm()
-structured_model = llm.with_structured_output(TravelQuery)
-api_caller = APICaller()
-web_scrapper = LLMWebScrapper()
-parser = StrOutputParser()
-prompt = build_prompt()
+st.set_page_config(page_title="🤖 AI Travel Agent", layout="wide")
+st.title("🤖 Your Personal AI Travel Agent")
 
-st.title("AI Travel Agent")
-input_text = st.text_input("Describe your travel plans:", placeholder="e.g. I want to visit Paris with my family for 7 days")
+agent_executor = create_agent()
 
-if input_text:
-    with st.spinner("🔍 Analyzing your request and gathering real-time data..."):
-        structured_result = structured_model.invoke(input_text)
+# Initializing chat history in st.session_state
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = [
+        AIMessage(
+            content="Hello! I'm your expert AI travel agent. Where are you heading next?"
+        )
+    ]
 
-        travel_dict = dict(structured_result)
+# previous messages
+for message in st.session_state.chat_history:
+    if isinstance(message, AIMessage):
+        with st.chat_message("AI"):
+            st.markdown(message.content)
+    elif isinstance(message, HumanMessage):
+        with st.chat_message("Human"):
+            st.markdown(message.content)
 
-        st.write("📊 Collecting real-time information...")
+user_query = st.chat_input("Ask me anything about your travel plans!")
 
-        weather_data = api_caller.get_weather_forecast(travel_dict['destination'])
-        flight_data = None
-        if travel_dict.get('origin'):
-            flight_data = api_caller.plan_flights(travel_dict.get('origin', 'India'), travel_dict['destination'])
-        # else:
-        #     flight_data = api_caller.find_flights('India', travel_dict['destination'])
-        visa_data = web_scrapper.scrape_visa_requirements(travel_dict['destination'], travel_dict.get('origin', 'India'))
+if user_query is not None and user_query.strip() != "":
+    st.session_state.chat_history.append(HumanMessage(content=user_query))
+    with st.chat_message("Human"):
+        st.markdown(user_query)
+    
+    with st.chat_message("AI"):
+        with st.spinner("Thinking..."):
+            response = agent_executor.invoke(
+                {
+                    "input": user_query,
+                    "chat_history": st.session_state.chat_history
+                }
+            )
 
-        combined_data = {
-            'duration': travel_dict.get('duration', 'flexible'),
-            'destination': travel_dict.get('destination', ''),
-            'traveler_type': travel_dict.get('traveler_type', 'solo'),
-            'interests': travel_dict.get('interests', 'tourism'),
-            'budget': travel_dict.get('budget', 'not specified'),
-            'departure_date': travel_dict.get('departure_date', 'flexible'),
-            'origin': travel_dict.get('origin', 'India'),
-            'intent': travel_dict.get('intent', 'tourism'),
-            'weather_info': weather_data,
-            'flight_info': flight_data,
-            'visa_info': visa_data
-        }
-        chain = prompt | llm | parser
-        result = chain.invoke(combined_data)
-
-        st.markdown(result)
+            st.markdown(response["output"])
+    
+    st.session_state.chat_history.append(AIMessage(content=response["output"]))

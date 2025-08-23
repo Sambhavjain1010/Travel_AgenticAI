@@ -53,5 +53,30 @@
         "embassy_info": "Visa applications need to be submitted to the nearest French embassy/consulate or authorized visa application center.",
         "last_updated": "October 2023",
         "confidence_level": 0.95
+    },
+    "united states": {
+        "destination_country": "United States",
+        "passport_country": "India",
+        "visa_requirement": {
+            "visa_type": "visa_required",
+            "max_stay_days": null,
+            "processing_time": null,
+            "validity_period": null,
+            "cost": null,
+            "requirements": [
+                "Completed visa application (DS-160 or DS-260)",
+                "Recent passport-sized photo",
+                "Valid passport",
+                "Visa application fee payment confirmation"
+            ]
+        },
+        "special_notes": [
+            "Applicants may need to attend a visa interview at a US embassy/consulate",
+            "Visa processing times can vary"
+        ],
+        "reciprocity_info": null,
+        "embassy_info": "Applications are processed through the US Embassy or Consulate in the applicant's residence country.",
+        "last_updated": null,
+        "confidence_level": 0.95
     }
 }

@@ -1,466 +1,1461 @@
-data
-    input_parser.py
+├── .gitignore
+├── .vscode
+    └── settings.json
+├── README.md
+└── Travel_agenticAI
+    ├── Travel_agenticAI
+        ├── .env
+        ├── data
+        │   ├── __pycache__
+        │   │   ├── input_parser.cpython-312.pyc
+        │   │   └── visa_data_class.cpython-312.pyc
+        │   ├── input_parser.py
+        │   └── visa_data_class.py
+        ├── inputs
+        │   ├── __pycache__
+        │   │   ├── prompt_input.cpython-312.pyc
+        │   │   └── prompt_input.cpython-313.pyc
+        │   └── prompt_input.py
+        ├── main.py
+        ├── models
+        │   ├── __pycache__
+        │   │   └── llm_generator.cpython-312.pyc
+        │   └── llm_generator.py
+        ├── requirements.txt
+        ├── scraped_data
+        │   └── visa_requirements.json
+        ├── test.txt
+        ├── test_api.py
+        └── tools
+        │   ├── __pycache__
+        │       ├── api_caller.cpython-312.pyc
+        │       └── web_scrapper.cpython-312.pyc
+        │   ├── api_caller.py
+        │   └── web_scrapper.py
+    └── __MACOSX
+        ├── ._Travel_agenticAI
+        └── Travel_agenticAI
+            ├── ._.env
+            ├── ._.venv
+            ├── ._agents
+            ├── ._data
+            ├── ._inputs
+            ├── ._main.py
+            ├── ._models
+            ├── ._tools
+            ├── agents
+                └── ._input_parser.py
+            ├── inputs
+                ├── .___pycache__
+                ├── ._prompt_input.py
+                └── __pycache__
+                │   └── ._prompt_input.cpython-313.pyc
+            └── models
+                └── ._llm_generator.py
 
-    # from models.llm_generator import build_llm
-    from pydantic import BaseModel, Field
-    from typing import Optional, Literal
 
-    class TravelQuery (BaseModel):
-        destination: str = Field(description="Place to travel, itenary will be prepared according to this")
-        duration: Optional[int] = Field(description="The number of days for travel")
-        traveler_type: Optional[Literal['family', 'couple', 'friends', 'solo']] = Field(description="The kind of people user is travelling with")
-        interests: Optional[str] = Field(description="The kind of activities user is interested in.")
-        budget: Optional[str] = Field(description="User's budget for the trip")
-    
-    visa_safety_data_classes.py
-        from pydantic import BaseModel, Field
-        from typing import Optional, Literal, Dict, Any, List
-        from enum import Enum
+/.gitignore:
+--------------------------------------------------------------------------------
+1 | .venv/
+2 | _MACOSX/
+3 | Travel_agenticAI.zip
+4 | project/
+5 | .env
+6 | 
 
-        class VisaRequirement(BaseModel):
-            visa_type: Literal['visa_free', 'visa_on_arrival', 'e_visa', 'visa_required', 'unknown'] = Field(description="Type of visa requirement")
-            max_stay_days: Optional[int] = Field(description="Maximum number of days allowed for stay")
-            processing_time: Optional[str] = Field(description="Visa processing time")
-            validity_period: Optional[str] = Field(description="Visa validity period")
-            cost: Optional[str] = Field(description="Cost/Fee of visa")
-            requirements: Optional[List[str]] = Field(description="List of required documents and conditions")
 
-        class ExtractedVisaInfo(BaseModel):
-            destination_country: str = Field(description="Destination country name")
-            passport_country: str = Field(description="Passport/citizenship country")
-            visa_requirement: VisaRequirement = Field(description="Visa requirement details")
-            special_notes: List[str] = Field(description="Important notes, restrictions, or special conditions")
-            reciprocity_info: Optional[str] = Field(description="Any reciprocity agreements mentioned")
-            embassy_info: Optional[str] = Field(description="Embassy or consulate information if mentioned")
-            last_updated: Optional[str] = Field(description="When the information was last updated")
-            confidence_level: float = Field(description="Confidence in extracted information (0.0-1.0)")
+--------------------------------------------------------------------------------
+/.vscode/settings.json:
+--------------------------------------------------------------------------------
+1 | {
+2 |     "git.ignoreLimitWarning": true
+3 | }
 
-        class ExtractedSafetyInfo(BaseModel):
-            city: str = Field(description="City name")
-            country: str = Field(description="Country name")
-            overall_safety_level: Literal["very_low", "low", "moderate", "high", "very_high", "unknown"] = Field(description="Overall safety level for tourists")
-            crime_index: Optional[float] = Field(description="Crime index score (0-100)")
-            safety_index: Optional[float] = Field(description="Safety index score (0-100)")
-            specific_risks: List[str] = Field(description="Specific safety risks mentioned")
-            safe_areas: List[str] = Field(description="Areas considered safe")
-            unsafe_areas: List[str] = Field(description="Areas to avoid")
-            safety_tips: List[str] = Field(description="Practical safety recommendations")
-            emergency_numbers: List[str] = Field(description="Emergency contact numbers")
-            best_time_safety: Optional[str] = Field(description="Safest times to visit/travel")
-            transportation_safety: Optional[str] = Field(description="Transportation safety information")
-            confidence_level: float = Field(description="Confidence in extracted information (0.0-1.0)")
-        inputs
-            prompt_input.py
-            
-            from langchain_core.prompts import PromptTemplate
 
-            def build_prompt():
-                prompt = PromptTemplate(
-                    template="""
-                    I'm planning a {duration} day trip to {destination} with {traveler_type} for a {interests} vacation.
-                    """,
-                    input_variables=['duration', 'destination', 'traveler_type', 'interests']
-                )
+--------------------------------------------------------------------------------
+/README.md:
+--------------------------------------------------------------------------------
+1 | Travel Agent with Agentic AI
+2 | 
 
-                return prompt
-tools
-    api_caller.py
-        # weather and flight APIs are working, rest are not working
-    import requests
-    import json
-    import os
-    from typing import Dict, Optional, Any
-    from datetime import datetime, timedelta
-    import asyncio
-    from dotenv import load_dotenv
 
-    load_dotenv()
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/.env:
+--------------------------------------------------------------------------------
+ 1 | # Azure API Keys
+ 2 | AZURE_OPENAI_API_KEY="AfaRByMgqnIOCK2sFqKtR4eBzDmpeVKRg9DdqTGtVwxs4NwvybIBJQQJ99BGACHYHv6XJ3w3AAAAACOGq0FT"
+ 3 | AZURE_OPENAI_API_VERSION="2024-12-01-preview"
+ 4 | AZURE_OPENAI_API_ENDPOINT="https://sambh-mcm529d1-eastus2.cognitiveservices.azure.com/"
+ 5 | 
+ 6 | # OpenWeather API
+ 7 | OPENWEATHER_API_KEY="ddfa38a67838728f85b9fa4869a4bf82"
+ 8 | 
+ 9 | # X-RapidAPI for visa requirements
+10 | X_RAPIDAPI_KEY="67e394e583msh54bd02f5eeba8a4p17926ajsncd6dea813dd1"
+11 | X_RAPIDAPI_HOST="visa-requirement.p.rapidapi.com"
+12 | 
+13 | # Aviation Stack API for flight information
+14 | AVIATIONSTACK_API_KEY="ff1c1fbeb8d1abe883475c8ea8931d83"
+15 | AVIATIONSTACK_API_ENDPOINT="https://api.aviationstack.com/v1"
+16 | 
+17 | # Amadeus API for safety information
+18 | AMADEUS_SAFETY_API_KEY="EZKQ968cOG3RxW535k63EuFridnWuhaJ"
+19 | AMADEUS_SAFETY_API_SECRET="ifMzojZgNdtemHPj"
 
-    class APICallerError(Exception):
-        """Custom exception for API caller errors"""
-        pass
 
-    class APICaller:
-        def __init__(self):
-            self.openweather_api_key = os.getenv("OPENWEATHER_API_KEY")
-            self.aviationstack_api_key = os.getenv("AVIATIONSTACK_API_KEY")
-            self.aviationstack_api_endpoint = os.getenv("AVIATIONSTACK_API_ENDPOINT")
-            
-        def get_weather_forecast(self, city:str, days:int = 5) -> Dict[str, Any]:
-            """Get weather forecast for a city"""
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/data/__pycache__/input_parser.cpython-312.pyc:
+--------------------------------------------------------------------------------
+https://raw.githubusercontent.com/Sambhavjain1010/Travel_AgenticAI/2a772e644ad7733acd5396474adbf7b6debd230d/Travel_agenticAI/Travel_agenticAI/data/__pycache__/input_parser.cpython-312.pyc
 
-            try:
-                url = "http://api.openweathermap.org/data/2.5/forecast"
-                params = {
-                    'q': city,
-                    'appid': self.openweather_api_key,
-                    'units': 'metric',
-                    'cnt': min(days * 8, 40)
-                }
 
-                response = requests.get(url, params=params)
-                response.raise_for_status()
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/data/__pycache__/visa_data_class.cpython-312.pyc:
+--------------------------------------------------------------------------------
+https://raw.githubusercontent.com/Sambhavjain1010/Travel_AgenticAI/2a772e644ad7733acd5396474adbf7b6debd230d/Travel_agenticAI/Travel_agenticAI/data/__pycache__/visa_data_class.cpython-312.pyc
 
-                data = response.json()
-                forecasts = []
-                daily_forecasts = {}
 
-                for item in data['list']:
-                    date = item['dt_txt'].split(' ')[0]  
-                    if date not in daily_forecasts:
-                        daily_forecasts[date] = []
-                    daily_forecasts[date].append(item)
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/data/input_parser.py:
+--------------------------------------------------------------------------------
+ 1 | # from models.llm_generator import build_llm
+ 2 | from pydantic import BaseModel, Field
+ 3 | from typing import Optional, Literal
+ 4 | 
+ 5 | class TravelQuery (BaseModel):
+ 6 |     destination: str = Field(description="Place to travel, itenary will be prepared according to this")
+ 7 |     duration: Optional[int] = Field(description="The number of days for travel")
+ 8 |     traveler_type: Optional[Literal['family', 'couple', 'friends', 'solo']] = Field(description="The kind of people user is travelling with")
+ 9 |     interests: Optional[str] = Field(description="The kind of activities user is interested in.")
+10 |     budget: Optional[str] = Field(description="User's budget for the trip")
+11 |     departure_date: Optional[str] = Field(description="When to start the trip (YYYY-MM-DD format)")
+12 |     origin: Optional[str] = Field(description="Departure city / airport code")
+13 |     intent: Optional[str] = Field(description="What is the purpose of travel")
+14 | 
+15 | class ToolResponse (BaseModel):
+16 |     tools_name: str
+17 |     data: dict
+18 |     error: Optional[str] = None
 
-                for date, day_forecasts in list(daily_forecasts.items())[:days]:  
-                    midday_forecast = None
-                    for forecast in day_forecasts:
-                        if '12:00:00' in forecast['dt_txt']:
-                            midday_forecast = forecast
-                            break
-                    
-                    if not midday_forecast:
-                        midday_forecast = day_forecasts[0]
-                    
-                    forecasts.append({
-                        'date': date,
-                        'datetime': midday_forecast['dt_txt'],
-                        'temperature': midday_forecast['main']['temp'],
-                        'feels_like': midday_forecast['main']['feels_like'],
-                        'humidity': midday_forecast['main']['humidity'],
-                        'description': midday_forecast['weather'][0]['description'].title(),
-                        'main': midday_forecast['weather'][0]['main'],
-                        'wind_speed': midday_forecast.get('wind', {}).get('speed', 'N/A'),
-                        'clouds': midday_forecast.get('clouds', {}).get('all', 'N/A')
-                    })
-                
-                return {
-                    'city': city,
-                    'country': data['city']['country'],
-                    'timezone': data['city']['timezone'],
-                    'forecasts': forecasts,
-                    'total_forecasts': len(forecasts)
-                }
-            except Exception as e:
-                return {
-                    'city': city,
-                    'error': f"Could not fetch weather info: {str(e)}",
-                    'forecasts': []
-                }
-            
-        def find_flights(self, origin: str, destination: str, departure_date: str = None,
-                        return_date: str = None, adults: int = 1) -> Dict[str, Any]:
-            """Find flights between two locations"""
-            try:
-                url = f"{self.aviationstack_api_endpoint}/flights"
-                params = {
-                    'access_key': self.aviationstack_api_key,
-                    'dep_iata': origin,
-                    'arr_iata': destination,
-                    'limit': 10
-                }
 
-                if departure_date:
-                    params['flight_date'] = departure_date
-                
-                response = requests.get(url, params=params)
-                response.raise_for_status()
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/data/visa_data_class.py:
+--------------------------------------------------------------------------------
+ 1 | from pydantic import BaseModel, Field
+ 2 | from typing import Optional, Literal, Dict, Any, List
+ 3 | from enum import Enum
+ 4 | 
+ 5 | class VisaRequirement(BaseModel):
+ 6 |     visa_type: Literal['visa_free', 'visa_on_arrival', 'e_visa', 'visa_required', 'unknown'] = Field(description="Type of visa requirement")
+ 7 |     max_stay_days: Optional[int] = Field(description="Maximum number of days allowed for stay")
+ 8 |     processing_time: Optional[str] = Field(description="Visa processing time")
+ 9 |     validity_period: Optional[str] = Field(description="Visa validity period")
+10 |     cost: Optional[str] = Field(description="Cost/Fee of visa")
+11 |     requirements: Optional[List[str]] = Field(description="List of required documents and conditions")
+12 | 
+13 | class ExtractedVisaInfo(BaseModel):
+14 |     destination_country: str = Field(description="Destination country name")
+15 |     passport_country: str = Field(description="Passport/citizenship country")
+16 |     visa_requirement: VisaRequirement = Field(description="Visa requirement details")
+17 |     special_notes: List[str] = Field(description="Important notes, restrictions, or special conditions")
+18 |     reciprocity_info: Optional[str] = Field(description="Any reciprocity agreements mentioned")
+19 |     embassy_info: Optional[str] = Field(description="Embassy or consulate information if mentioned")
+20 |     last_updated: Optional[str] = Field(description="When the information was last updated")
+21 |     confidence_level: float = Field(description="Confidence in extracted information (0.0-1.0)")
 
-                data = response.json()
-                flights = []
-                
-                if not data.get('data'):
-                    return {
-                        'origin': origin,
-                        'destination': destination,
-                        'flights': [],
-                        'error': 'No flights found for the specified route',
-                        'suggestions': 'Try checking major airport codes or different dates'
-                    }
-                for flight in data['data'][:5]:
-                    airline = flight.get('airline') or {}
-                    flight_info = {
-                        'flight_number': f"{airline.get('iata', 'N/A')}{(flight.get('flight') or {}).get('number', '')}",
-                        'airline': airline.get('name', 'Unknown'),
-                        'aircraft': (flight.get('aircraft') or {}).get('registration', 'N/A'),
-                        'departure': {
-                            'airport': (flight.get('departure') or {}).get('airport', 'N/A'),
-                            'scheduled': (flight.get('departure') or {}).get('scheduled', 'N/A'),
-                            'estimated': (flight.get('departure') or {}).get('estimated', 'N/A'),
-                            'terminal': (flight.get('departure') or {}).get('terminal', 'N/A'),
-                            'gate': (flight.get('departure') or {}).get('gate', 'N/A')
-                        },
-                        'arrival': {
-                            'airport': (flight.get('arrival') or {}).get('airport', 'N/A'),
-                            'scheduled': (flight.get('arrival') or {}).get('scheduled', 'N/A'),
-                            'estimated': (flight.get('arrival') or {}).get('estimated', 'N/A'),
-                            'terminal': (flight.get('arrival') or {}).get('terminal', 'N/A'),
-                            'gate': (flight.get('arrival') or {}).get('gate', 'N/A')
-                        },
-                        'status': flight.get('flight_status', 'Unknown')
-                    }
-                    flights.append(flight_info)
 
-                return {
-                    'origin': origin,
-                    'destination': destination,
-                    'flights': flights,
-                    'search_date': departure_date or 'Live data',
-                    'note': 'Live flight tracking data'
-                }
-            except Exception as e:
-                return {
-                    'origin': origin,
-                    'destination': destination,
-                    'error': f"Could not fetch flight details {str(e)}",
-                    'flights': [],
-                    'suggestion': 'Please verify airport codes and try again'
-                }
-            
-        def get_route_flights(self, origin: str, destination: str) -> Dict[str, Any]:
-            """Get route information between airports using AviationStack"""
-            try:
-                url = f"{self.aviationstack_api_endpoint}/routes"
-                
-                params = {
-                    'access_key': self.aviationstack_api_key,
-                    'dep_iata': origin,
-                    'arr_iata': destination
-                }
-                
-                response = requests.get(url, params=params)
-                response.raise_for_status()
-                
-                data = response.json()
-                
-                if not data.get('data'):
-                    return {
-                        'origin': origin,
-                        'destination': destination,
-                        'routes': [],
-                        'message': 'No routes found between these airports'
-                    }
-                
-                routes = []
-                for route in data['data']:
-                    route_info = {
-                        'airline': route.get('airline_name', 'Unknown'),
-                        'airline_iata': route.get('airline_iata', 'N/A'),
-                        'flight_number': route.get('flight_number', 'N/A'),
-                        'departure_airport': route.get('dep_airport', 'N/A'),
-                        'arrival_airport': route.get('arr_airport', 'N/A')
-                    }
-                    routes.append(route_info)
-                
-                return {
-                    'origin': origin,
-                    'destination': destination,
-                    'routes': routes,
-                    'total_routes': len(routes)
-                }
-            except Exception as e:
-                return {
-                    'origin': origin,
-                    'destination': destination,
-                    'error': f"Could not fetch route info: {str(e)}",
-                    'routes': []
-                }
-            
-        def get_airport_info(self, airport_code: str) -> Dict[str, Any]:
-            """Get airport information using AviationStack"""
-            try:
-                url = f"{self.aviationstack_api_endpoint}/airports"
-                
-                params = {
-                    'access_key': self.aviationstack_api_key,
-                    'search': airport_code
-                }
-                
-                response = requests.get(url, params=params)
-                response.raise_for_status()
-                
-                data = response.json()
-                
-                if not data.get('data'):
-                    return {
-                        'airport_code': airport_code,
-                        'error': 'Airport not found'
-                    }
-                
-                airport = data['data'][0]
-                return {
-                    'airport_code': airport_code,
-                    'name': airport.get('airport_name', 'N/A'),
-                    'iata_code': airport.get('iata_code', 'N/A'),
-                    'icao_code': airport.get('icao_code', 'N/A'),
-                    'country': airport.get('country_name', 'N/A'),
-                    'city': airport.get('city_name', 'N/A'),
-                    'timezone': airport.get('timezone', 'N/A'),
-                    'latitude': airport.get('latitude', 'N/A'),
-                    'longitude': airport.get('longitude', 'N/A')
-                }
-            except Exception as e:
-                return {
-                    'airport_code': airport_code,
-                    'error': f"Could not fetch airport info: {str(e)}"
-                }
-            
-        def _geocode_city(self, city: str) -> Optional[Dict[str, float]]:
-            """Helper function to get geocode of a city using OpenWeatherMap geocoding"""
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/inputs/__pycache__/prompt_input.cpython-312.pyc:
+--------------------------------------------------------------------------------
+https://raw.githubusercontent.com/Sambhavjain1010/Travel_AgenticAI/2a772e644ad7733acd5396474adbf7b6debd230d/Travel_agenticAI/Travel_agenticAI/inputs/__pycache__/prompt_input.cpython-312.pyc
 
-            try:
-                url="http://api.openweathermap.org/geo/1.0/direct"
-                params = {
-                    'q': city,
-                    'limit': 1,
-                    'appid': self.openweather_api_key
-                }
 
-                response = requests.get(url, params=params)
-                response.raise_for_status()
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/inputs/__pycache__/prompt_input.cpython-313.pyc:
+--------------------------------------------------------------------------------
+https://raw.githubusercontent.com/Sambhavjain1010/Travel_AgenticAI/2a772e644ad7733acd5396474adbf7b6debd230d/Travel_agenticAI/Travel_agenticAI/inputs/__pycache__/prompt_input.cpython-313.pyc
 
-                data = response.json()
-                if data:
-                    return {
-                        'lat': data[0]['lat'],
-                        'lon': data[0]['lon']
-                    }
-                return None
-            except:
-                return None
 
-    web_scrapper.py
-        # api calling not working for visa requirements and safety ratings, I can use web scraping for that
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/inputs/prompt_input.py:
+--------------------------------------------------------------------------------
+ 1 | from langchain_core.prompts import PromptTemplate
+ 2 | 
+ 3 | def build_prompt():
+ 4 |     prompt = PromptTemplate(
+ 5 |         template="""
+ 6 |         You are an expert AI travel agent with access to real-time travel data. A customer has requested help with their travel planning.
+ 7 |         Check if it is provided that which country's citizen is the user, also check for what purpose the user is travelling and create the itinerary accordingly. Keep the destination only to the main city or the country that the person is travelling to.
+ 8 |         Customer Request:
+ 9 |         - Destination: {destination}
+10 |         - Duration: {duration}
+11 |         - Traveller Type: {traveler_type}
+12 |         - Interests: {interests}
+13 |         - Budget: {budget}
+14 |         - Intent: {intent}
+15 |         - Departure from: {origin}
+16 |         - Travel Date: {departure_date}
+17 | 
+18 |         Real-Time Data available:
+19 |         - Weather: {weather_info}
+20 |         - Flights: {flight_info}
+21 |         - Visa Requirements: {visa_info}
+22 | 
+23 |         Instructions:
+24 |         Create a comprehensive and detailed travel itinerary based on customer's request and the real-time data available. Budget considerations: if budget not provided, provide 3 options:
+25 |                                 - Luxury experience
+26 |                                 - Mid-range experience
+27 |                                 - Budget experience
+28 |         1. Pre-travel preperations: (visa requirements, weather considerations)
+29 |         2. Transportation: (flight options if available)
+30 |         3. Daily itinerary: tailored to their interests
+31 |         4. Practical tips: based on the weather and local conditions
+32 | 
+33 |         use the real-time data to make specific, accurate recomendations. Be detailed and
+34 |         """,
+35 |         input_variables=['duration', 'destination', 'traveler_type', 'interests', 'budget', 'departure_date', 'origin', 'weather_info', 'flight_info', 'visa_info', 'intent']
+36 |     )
+37 | 
+38 |     return prompt
 
-        import requests
-        from bs4 import BeautifulSoup
-        import time
-        import random
-        from typing import Dict, List, Optional, Any
-        import re
-        import json
-        from models.llm_generator import build_llm
-        from selenium import webdriver
-        from selenium.webdriver.common.by import By
-        from selenium.webdriver.common.action_chains import ActionChains
-        from selenium.webdriver.support.ui import WebDriverWait
-        from selenium.webdriver.support import expected_conditions as EC
 
-        class LLMWebScrapper:
-            llm = build_llm()
-            def __init__(self):
-                self.headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
-                }
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/main.py:
+--------------------------------------------------------------------------------
+ 1 | import streamlit as st
+ 2 | from tools.api_caller import APICaller
+ 3 | from tools.web_scrapper import LLMWebScrapper
+ 4 | from inputs.prompt_input import build_prompt
+ 5 | from data.input_parser import TravelQuery
+ 6 | from models.llm_generator import build_llm
+ 7 | from langchain_core.output_parsers import StrOutputParser
+ 8 | 
+ 9 | llm = build_llm()
+10 | structured_model = llm.with_structured_output(TravelQuery)
+11 | api_caller = APICaller()
+12 | web_scrapper = LLMWebScrapper()
+13 | parser = StrOutputParser()
+14 | prompt = build_prompt()
+15 | 
+16 | st.title("AI Travel Agent")
+17 | input_text = st.text_input("Describe your travel plans:", placeholder="e.g. I want to visit Paris with my family for 7 days")
+18 | 
+19 | if input_text:
+20 |     with st.spinner("🔍 Analyzing your request and gathering real-time data..."):
+21 |         structured_result = structured_model.invoke(input_text)
+22 | 
+23 |         travel_dict = dict(structured_result)
+24 | 
+25 |         st.write("📊 Collecting real-time information...")
+26 | 
+27 |         weather_data = api_caller.get_weather_forecast(travel_dict['destination'])
+28 |         flight_data = None
+29 |         if travel_dict.get('origin'):
+30 |             flight_data = api_caller.plan_flights(travel_dict.get('origin', 'India'), travel_dict['destination'])
+31 |         # else:
+32 |         #     flight_data = api_caller.find_flights('India', travel_dict['destination'])
+33 |         visa_data = web_scrapper.scrape_visa_requirements(travel_dict['destination'], travel_dict.get('origin', 'India'))
+34 | 
+35 |         combined_data = {
+36 |             'duration': travel_dict.get('duration', 'flexible'),
+37 |             'destination': travel_dict.get('destination', ''),
+38 |             'traveler_type': travel_dict.get('traveler_type', 'solo'),
+39 |             'interests': travel_dict.get('interests', 'tourism'),
+40 |             'budget': travel_dict.get('budget', 'not specified'),
+41 |             'departure_date': travel_dict.get('departure_date', 'flexible'),
+42 |             'origin': travel_dict.get('origin', 'India'),
+43 |             'intent': travel_dict.get('intent', 'tourism'),
+44 |             'weather_info': weather_data,
+45 |             'flight_info': flight_data,
+46 |             'visa_info': visa_data
+47 |         }
+48 |         chain = prompt | llm | parser
+49 |         result = chain.invoke(combined_data)
+50 | 
+51 |         st.markdown(result)
 
-                self.session = requests.Session()
-                self.session.headers.update(self.headers)
 
-                self.driver = webdriver.Chrome()
-                self.chrome_options = webdriver.ChromeOptions()
-                self.chrome_options.add_argument('--headless')
-                self.chrome_options.add_argument('--no-sandbox')
-                self.chrome_options.add_argument('--disable-dev-shm-usage')
-            
-            def scrape_visa_requirements(self, destination_country: str, passport_country: str = "India") -> Dict[str, Any]:
-                
-                source_data = []
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/models/__pycache__/llm_generator.cpython-312.pyc:
+--------------------------------------------------------------------------------
+https://raw.githubusercontent.com/Sambhavjain1010/Travel_AgenticAI/2a772e644ad7733acd5396474adbf7b6debd230d/Travel_agenticAI/Travel_agenticAI/models/__pycache__/llm_generator.cpython-312.pyc
 
-                visa_index_data = self.scrape_visa_index(destination_country, passport_country)
-                if visa_index_data and 'error' not in visa_index_data:
-                    source_data.append({
-                        'source': 'visa_index',
-                        'data': visa_index_data
-                    })
-                ivisa_data = self.scrape_ivisa(destination_country, passport_country)
-                if ivisa_data and 'error' not in ivisa_data:
-                    source_data.append({
-                        'source': 'ivisa',
-                        'data': ivisa_data
-                    })
-                government_data = self.scrape_government_visa(destination_country, passport_country)
-                if government_data and 'error' not in government_data:
-                    source_data.append({
-                        'source': 'government',
-                        'data': government_data
-                    })
-                
-                return {
-                    'destination_country': destination_country,
-                    'passport_country': passport_country,
-                    'sources': source_data,
-                    'scraped_at': time.strftime('%Y-%m-%d %H:%M:%S'),
-                    'total_sources': len(source_data)
-                }
 
-            def scrape_visa_index (self, destination_country: str, passport_country: str) -> Dict[str, Any]:
-                """Scrapes visa requirements from Visa Index"""
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/models/llm_generator.py:
+--------------------------------------------------------------------------------
+ 1 | from langchain_openai import AzureChatOpenAI
+ 2 | from dotenv import load_dotenv
+ 3 | import os
+ 4 | 
+ 5 | load_dotenv()
+ 6 | 
+ 7 | key = os.getenv("AZURE_OPENAI_API_KEY")
+ 8 | endpoint = os.getenv("AZURE_OPENAI_API_ENDPOINT")
+ 9 | version = os.getenv("AZURE_OPENAI_API_VERSION")
+10 | 
+11 | def build_llm() :
+12 |     llm = AzureChatOpenAI (
+13 |         api_key=key,
+14 |         azure_endpoint=endpoint,
+15 |         api_version=version,
+16 |         deployment_name="gpt-4o",
+17 |         temperature=1
+18 |     )
+19 |     
+20 |     return llm
 
-                try:
-                    url = f"https://visaindex.com/visa/{destination_country}-visa/"
-                    response = self.session.get(url, timeout=15)
-                    response.raise_for_status()
 
-                    soup = BeautifulSoup(response.text, 'html.parser')
-inputs
-    prompt_input.py
-        from langchain_core.prompts import PromptTemplate
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/requirements.txt:
+--------------------------------------------------------------------------------
+ 1 | streamlit
+ 2 | langchain
+ 3 | langchain-openai
+ 4 | langchain-community
+ 5 | python-dotenv
+ 6 | requests
+ 7 | beautifulsoup4
+ 8 | aiohttp
+ 9 | selenium
+10 | pydantic
+11 | geopy
+12 | airports-py
 
-        def build_prompt():
-            prompt = PromptTemplate(
-                template="""
-                I'm planning a {duration} day trip to {destination} with {traveler_type} for a {interests} vacation.
-                """,
-                input_variables=['duration', 'destination', 'traveler_type', 'interests']
-            )
 
-            return prompt
-models
-    llm_generator.py
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/scraped_data/visa_requirements.json:
+--------------------------------------------------------------------------------
+ 1 | {
+ 2 |     "united kingdom": {
+ 3 |         "destination_country": "United Kingdom",
+ 4 |         "passport_country": "India",
+ 5 |         "visa_requirement": {
+ 6 |             "visa_type": "visa_required",
+ 7 |             "max_stay_days": null,
+ 8 |             "processing_time": "7 weeks (as of recent updates)",
+ 9 |             "validity_period": null,
+10 |             "cost": null,
+11 |             "requirements": [
+12 |                 "Valid passport",
+13 |                 "Visa application form (online)",
+14 |                 "Proof of payment",
+15 |                 "Biometric information at visa application center or via mobile app"
+16 |             ]
+17 |         },
+18 |         "special_notes": [
+19 |             "Applicants need to verify travel purpose to select appropriate visa type.",
+20 |             "Processing times may vary, check for updates before application."
+21 |         ],
+22 |         "reciprocity_info": null,
+23 |         "embassy_info": "Visa applications can often be submitted online via the official GOV.UK website.",
+24 |         "last_updated": null,
+25 |         "confidence_level": 0.9
+26 |     },
+27 |     "france": {
+28 |         "destination_country": "France",
+29 |         "passport_country": "India",
+30 |         "visa_requirement": {
+31 |             "visa_type": "visa_required",
+32 |             "max_stay_days": 90,
+33 |             "processing_time": "14 to 90 days before travel",
+34 |             "validity_period": "depends on visa type (short-term or long-term)",
+35 |             "cost": "varies by visa type and applicant's age",
+36 |             "requirements": [
+37 |                 "Passport with over 3 months validity post exit",
+38 |                 "Visa application form",
+39 |                 "Visa fee payment",
+40 |                 "Recent passport-style photographs",
+41 |                 "Biographical documentation (e.g., birth certificate)",
+42 |                 "Financial proof (e.g., bank statements)",
+43 |                 "Accommodation information during stay",
+44 |                 "Travel itinerary",
+45 |                 "Proof of medical insurance",
+46 |                 "Educational certificates for student visa applications"
+47 |             ]
+48 |         },
+49 |         "special_notes": [
+50 |             "Official translations of documents into English, French, or other accepted languages may be required."
+51 |         ],
+52 |         "reciprocity_info": null,
+53 |         "embassy_info": "Visa applications need to be submitted to the nearest French embassy/consulate or authorized visa application center.",
+54 |         "last_updated": "October 2023",
+55 |         "confidence_level": 0.95
+56 |     }
+57 | }
 
-    from langchain_openai import AzureChatOpenAI
-    from dotenv import load_dotenv
-    import os
 
-    load_dotenv()
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/test.txt:
+--------------------------------------------------------------------------------
+  1 | data
+  2 |     input_parser.py
+  3 | 
+  4 |     # from models.llm_generator import build_llm
+  5 |     from pydantic import BaseModel, Field
+  6 |     from typing import Optional, Literal
+  7 | 
+  8 |     class TravelQuery (BaseModel):
+  9 |         destination: str = Field(description="Place to travel, itenary will be prepared according to this")
+ 10 |         duration: Optional[int] = Field(description="The number of days for travel")
+ 11 |         traveler_type: Optional[Literal['family', 'couple', 'friends', 'solo']] = Field(description="The kind of people user is travelling with")
+ 12 |         interests: Optional[str] = Field(description="The kind of activities user is interested in.")
+ 13 |         budget: Optional[str] = Field(description="User's budget for the trip")
+ 14 |     
+ 15 |     visa_safety_data_classes.py
+ 16 |         from pydantic import BaseModel, Field
+ 17 |         from typing import Optional, Literal, Dict, Any, List
+ 18 |         from enum import Enum
+ 19 | 
+ 20 |         class VisaRequirement(BaseModel):
+ 21 |             visa_type: Literal['visa_free', 'visa_on_arrival', 'e_visa', 'visa_required', 'unknown'] = Field(description="Type of visa requirement")
+ 22 |             max_stay_days: Optional[int] = Field(description="Maximum number of days allowed for stay")
+ 23 |             processing_time: Optional[str] = Field(description="Visa processing time")
+ 24 |             validity_period: Optional[str] = Field(description="Visa validity period")
+ 25 |             cost: Optional[str] = Field(description="Cost/Fee of visa")
+ 26 |             requirements: Optional[List[str]] = Field(description="List of required documents and conditions")
+ 27 | 
+ 28 |         class ExtractedVisaInfo(BaseModel):
+ 29 |             destination_country: str = Field(description="Destination country name")
+ 30 |             passport_country: str = Field(description="Passport/citizenship country")
+ 31 |             visa_requirement: VisaRequirement = Field(description="Visa requirement details")
+ 32 |             special_notes: List[str] = Field(description="Important notes, restrictions, or special conditions")
+ 33 |             reciprocity_info: Optional[str] = Field(description="Any reciprocity agreements mentioned")
+ 34 |             embassy_info: Optional[str] = Field(description="Embassy or consulate information if mentioned")
+ 35 |             last_updated: Optional[str] = Field(description="When the information was last updated")
+ 36 |             confidence_level: float = Field(description="Confidence in extracted information (0.0-1.0)")
+ 37 | 
+ 38 |         class ExtractedSafetyInfo(BaseModel):
+ 39 |             city: str = Field(description="City name")
+ 40 |             country: str = Field(description="Country name")
+ 41 |             overall_safety_level: Literal["very_low", "low", "moderate", "high", "very_high", "unknown"] = Field(description="Overall safety level for tourists")
+ 42 |             crime_index: Optional[float] = Field(description="Crime index score (0-100)")
+ 43 |             safety_index: Optional[float] = Field(description="Safety index score (0-100)")
+ 44 |             specific_risks: List[str] = Field(description="Specific safety risks mentioned")
+ 45 |             safe_areas: List[str] = Field(description="Areas considered safe")
+ 46 |             unsafe_areas: List[str] = Field(description="Areas to avoid")
+ 47 |             safety_tips: List[str] = Field(description="Practical safety recommendations")
+ 48 |             emergency_numbers: List[str] = Field(description="Emergency contact numbers")
+ 49 |             best_time_safety: Optional[str] = Field(description="Safest times to visit/travel")
+ 50 |             transportation_safety: Optional[str] = Field(description="Transportation safety information")
+ 51 |             confidence_level: float = Field(description="Confidence in extracted information (0.0-1.0)")
+ 52 |         inputs
+ 53 |             prompt_input.py
+ 54 |             
+ 55 |             from langchain_core.prompts import PromptTemplate
+ 56 | 
+ 57 |             def build_prompt():
+ 58 |                 prompt = PromptTemplate(
+ 59 |                     template="""
+ 60 |                     I'm planning a {duration} day trip to {destination} with {traveler_type} for a {interests} vacation.
+ 61 |                     """,
+ 62 |                     input_variables=['duration', 'destination', 'traveler_type', 'interests']
+ 63 |                 )
+ 64 | 
+ 65 |                 return prompt
+ 66 | tools
+ 67 |     api_caller.py
+ 68 |         # weather and flight APIs are working, rest are not working
+ 69 |     import requests
+ 70 |     import json
+ 71 |     import os
+ 72 |     from typing import Dict, Optional, Any
+ 73 |     from datetime import datetime, timedelta
+ 74 |     import asyncio
+ 75 |     from dotenv import load_dotenv
+ 76 | 
+ 77 |     load_dotenv()
+ 78 | 
+ 79 |     class APICallerError(Exception):
+ 80 |         """Custom exception for API caller errors"""
+ 81 |         pass
+ 82 | 
+ 83 |     class APICaller:
+ 84 |         def __init__(self):
+ 85 |             self.openweather_api_key = os.getenv("OPENWEATHER_API_KEY")
+ 86 |             self.aviationstack_api_key = os.getenv("AVIATIONSTACK_API_KEY")
+ 87 |             self.aviationstack_api_endpoint = os.getenv("AVIATIONSTACK_API_ENDPOINT")
+ 88 |             
+ 89 |         def get_weather_forecast(self, city:str, days:int = 5) -> Dict[str, Any]:
+ 90 |             """Get weather forecast for a city"""
+ 91 | 
+ 92 |             try:
+ 93 |                 url = "http://api.openweathermap.org/data/2.5/forecast"
+ 94 |                 params = {
+ 95 |                     'q': city,
+ 96 |                     'appid': self.openweather_api_key,
+ 97 |                     'units': 'metric',
+ 98 |                     'cnt': min(days * 8, 40)
+ 99 |                 }
+100 | 
+101 |                 response = requests.get(url, params=params)
+102 |                 response.raise_for_status()
+103 | 
+104 |                 data = response.json()
+105 |                 forecasts = []
+106 |                 daily_forecasts = {}
+107 | 
+108 |                 for item in data['list']:
+109 |                     date = item['dt_txt'].split(' ')[0]  
+110 |                     if date not in daily_forecasts:
+111 |                         daily_forecasts[date] = []
+112 |                     daily_forecasts[date].append(item)
+113 | 
+114 |                 for date, day_forecasts in list(daily_forecasts.items())[:days]:  
+115 |                     midday_forecast = None
+116 |                     for forecast in day_forecasts:
+117 |                         if '12:00:00' in forecast['dt_txt']:
+118 |                             midday_forecast = forecast
+119 |                             break
+120 |                     
+121 |                     if not midday_forecast:
+122 |                         midday_forecast = day_forecasts[0]
+123 |                     
+124 |                     forecasts.append({
+125 |                         'date': date,
+126 |                         'datetime': midday_forecast['dt_txt'],
+127 |                         'temperature': midday_forecast['main']['temp'],
+128 |                         'feels_like': midday_forecast['main']['feels_like'],
+129 |                         'humidity': midday_forecast['main']['humidity'],
+130 |                         'description': midday_forecast['weather'][0]['description'].title(),
+131 |                         'main': midday_forecast['weather'][0]['main'],
+132 |                         'wind_speed': midday_forecast.get('wind', {}).get('speed', 'N/A'),
+133 |                         'clouds': midday_forecast.get('clouds', {}).get('all', 'N/A')
+134 |                     })
+135 |                 
+136 |                 return {
+137 |                     'city': city,
+138 |                     'country': data['city']['country'],
+139 |                     'timezone': data['city']['timezone'],
+140 |                     'forecasts': forecasts,
+141 |                     'total_forecasts': len(forecasts)
+142 |                 }
+143 |             except Exception as e:
+144 |                 return {
+145 |                     'city': city,
+146 |                     'error': f"Could not fetch weather info: {str(e)}",
+147 |                     'forecasts': []
+148 |                 }
+149 |             
+150 |         def find_flights(self, origin: str, destination: str, departure_date: str = None,
+151 |                         return_date: str = None, adults: int = 1) -> Dict[str, Any]:
+152 |             """Find flights between two locations"""
+153 |             try:
+154 |                 url = f"{self.aviationstack_api_endpoint}/flights"
+155 |                 params = {
+156 |                     'access_key': self.aviationstack_api_key,
+157 |                     'dep_iata': origin,
+158 |                     'arr_iata': destination,
+159 |                     'limit': 10
+160 |                 }
+161 | 
+162 |                 if departure_date:
+163 |                     params['flight_date'] = departure_date
+164 |                 
+165 |                 response = requests.get(url, params=params)
+166 |                 response.raise_for_status()
+167 | 
+168 |                 data = response.json()
+169 |                 flights = []
+170 |                 
+171 |                 if not data.get('data'):
+172 |                     return {
+173 |                         'origin': origin,
+174 |                         'destination': destination,
+175 |                         'flights': [],
+176 |                         'error': 'No flights found for the specified route',
+177 |                         'suggestions': 'Try checking major airport codes or different dates'
+178 |                     }
+179 |                 for flight in data['data'][:5]:
+180 |                     airline = flight.get('airline') or {}
+181 |                     flight_info = {
+182 |                         'flight_number': f"{airline.get('iata', 'N/A')}{(flight.get('flight') or {}).get('number', '')}",
+183 |                         'airline': airline.get('name', 'Unknown'),
+184 |                         'aircraft': (flight.get('aircraft') or {}).get('registration', 'N/A'),
+185 |                         'departure': {
+186 |                             'airport': (flight.get('departure') or {}).get('airport', 'N/A'),
+187 |                             'scheduled': (flight.get('departure') or {}).get('scheduled', 'N/A'),
+188 |                             'estimated': (flight.get('departure') or {}).get('estimated', 'N/A'),
+189 |                             'terminal': (flight.get('departure') or {}).get('terminal', 'N/A'),
+190 |                             'gate': (flight.get('departure') or {}).get('gate', 'N/A')
+191 |                         },
+192 |                         'arrival': {
+193 |                             'airport': (flight.get('arrival') or {}).get('airport', 'N/A'),
+194 |                             'scheduled': (flight.get('arrival') or {}).get('scheduled', 'N/A'),
+195 |                             'estimated': (flight.get('arrival') or {}).get('estimated', 'N/A'),
+196 |                             'terminal': (flight.get('arrival') or {}).get('terminal', 'N/A'),
+197 |                             'gate': (flight.get('arrival') or {}).get('gate', 'N/A')
+198 |                         },
+199 |                         'status': flight.get('flight_status', 'Unknown')
+200 |                     }
+201 |                     flights.append(flight_info)
+202 | 
+203 |                 return {
+204 |                     'origin': origin,
+205 |                     'destination': destination,
+206 |                     'flights': flights,
+207 |                     'search_date': departure_date or 'Live data',
+208 |                     'note': 'Live flight tracking data'
+209 |                 }
+210 |             except Exception as e:
+211 |                 return {
+212 |                     'origin': origin,
+213 |                     'destination': destination,
+214 |                     'error': f"Could not fetch flight details {str(e)}",
+215 |                     'flights': [],
+216 |                     'suggestion': 'Please verify airport codes and try again'
+217 |                 }
+218 |             
+219 |         def get_route_flights(self, origin: str, destination: str) -> Dict[str, Any]:
+220 |             """Get route information between airports using AviationStack"""
+221 |             try:
+222 |                 url = f"{self.aviationstack_api_endpoint}/routes"
+223 |                 
+224 |                 params = {
+225 |                     'access_key': self.aviationstack_api_key,
+226 |                     'dep_iata': origin,
+227 |                     'arr_iata': destination
+228 |                 }
+229 |                 
+230 |                 response = requests.get(url, params=params)
+231 |                 response.raise_for_status()
+232 |                 
+233 |                 data = response.json()
+234 |                 
+235 |                 if not data.get('data'):
+236 |                     return {
+237 |                         'origin': origin,
+238 |                         'destination': destination,
+239 |                         'routes': [],
+240 |                         'message': 'No routes found between these airports'
+241 |                     }
+242 |                 
+243 |                 routes = []
+244 |                 for route in data['data']:
+245 |                     route_info = {
+246 |                         'airline': route.get('airline_name', 'Unknown'),
+247 |                         'airline_iata': route.get('airline_iata', 'N/A'),
+248 |                         'flight_number': route.get('flight_number', 'N/A'),
+249 |                         'departure_airport': route.get('dep_airport', 'N/A'),
+250 |                         'arrival_airport': route.get('arr_airport', 'N/A')
+251 |                     }
+252 |                     routes.append(route_info)
+253 |                 
+254 |                 return {
+255 |                     'origin': origin,
+256 |                     'destination': destination,
+257 |                     'routes': routes,
+258 |                     'total_routes': len(routes)
+259 |                 }
+260 |             except Exception as e:
+261 |                 return {
+262 |                     'origin': origin,
+263 |                     'destination': destination,
+264 |                     'error': f"Could not fetch route info: {str(e)}",
+265 |                     'routes': []
+266 |                 }
+267 |             
+268 |         def get_airport_info(self, airport_code: str) -> Dict[str, Any]:
+269 |             """Get airport information using AviationStack"""
+270 |             try:
+271 |                 url = f"{self.aviationstack_api_endpoint}/airports"
+272 |                 
+273 |                 params = {
+274 |                     'access_key': self.aviationstack_api_key,
+275 |                     'search': airport_code
+276 |                 }
+277 |                 
+278 |                 response = requests.get(url, params=params)
+279 |                 response.raise_for_status()
+280 |                 
+281 |                 data = response.json()
+282 |                 
+283 |                 if not data.get('data'):
+284 |                     return {
+285 |                         'airport_code': airport_code,
+286 |                         'error': 'Airport not found'
+287 |                     }
+288 |                 
+289 |                 airport = data['data'][0]
+290 |                 return {
+291 |                     'airport_code': airport_code,
+292 |                     'name': airport.get('airport_name', 'N/A'),
+293 |                     'iata_code': airport.get('iata_code', 'N/A'),
+294 |                     'icao_code': airport.get('icao_code', 'N/A'),
+295 |                     'country': airport.get('country_name', 'N/A'),
+296 |                     'city': airport.get('city_name', 'N/A'),
+297 |                     'timezone': airport.get('timezone', 'N/A'),
+298 |                     'latitude': airport.get('latitude', 'N/A'),
+299 |                     'longitude': airport.get('longitude', 'N/A')
+300 |                 }
+301 |             except Exception as e:
+302 |                 return {
+303 |                     'airport_code': airport_code,
+304 |                     'error': f"Could not fetch airport info: {str(e)}"
+305 |                 }
+306 |             
+307 |         def _geocode_city(self, city: str) -> Optional[Dict[str, float]]:
+308 |             """Helper function to get geocode of a city using OpenWeatherMap geocoding"""
+309 | 
+310 |             try:
+311 |                 url="http://api.openweathermap.org/geo/1.0/direct"
+312 |                 params = {
+313 |                     'q': city,
+314 |                     'limit': 1,
+315 |                     'appid': self.openweather_api_key
+316 |                 }
+317 | 
+318 |                 response = requests.get(url, params=params)
+319 |                 response.raise_for_status()
+320 | 
+321 |                 data = response.json()
+322 |                 if data:
+323 |                     return {
+324 |                         'lat': data[0]['lat'],
+325 |                         'lon': data[0]['lon']
+326 |                     }
+327 |                 return None
+328 |             except:
+329 |                 return None
+330 | 
+331 |     web_scrapper.py
+332 |         # api calling not working for visa requirements and safety ratings, I can use web scraping for that
+333 | 
+334 |         import requests
+335 |         from bs4 import BeautifulSoup
+336 |         import time
+337 |         import random
+338 |         from typing import Dict, List, Optional, Any
+339 |         import re
+340 |         import json
+341 |         from models.llm_generator import build_llm
+342 |         from selenium import webdriver
+343 |         from selenium.webdriver.common.by import By
+344 |         from selenium.webdriver.common.action_chains import ActionChains
+345 |         from selenium.webdriver.support.ui import WebDriverWait
+346 |         from selenium.webdriver.support import expected_conditions as EC
+347 | 
+348 |         class LLMWebScrapper:
+349 |             llm = build_llm()
+350 |             def __init__(self):
+351 |                 self.headers = {
+352 |                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
+353 |                 }
+354 | 
+355 |                 self.session = requests.Session()
+356 |                 self.session.headers.update(self.headers)
+357 | 
+358 |                 self.driver = webdriver.Chrome()
+359 |                 self.chrome_options = webdriver.ChromeOptions()
+360 |                 self.chrome_options.add_argument('--headless')
+361 |                 self.chrome_options.add_argument('--no-sandbox')
+362 |                 self.chrome_options.add_argument('--disable-dev-shm-usage')
+363 |             
+364 |             def scrape_visa_requirements(self, destination_country: str, passport_country: str = "India") -> Dict[str, Any]:
+365 |                 
+366 |                 source_data = []
+367 | 
+368 |                 visa_index_data = self.scrape_visa_index(destination_country, passport_country)
+369 |                 if visa_index_data and 'error' not in visa_index_data:
+370 |                     source_data.append({
+371 |                         'source': 'visa_index',
+372 |                         'data': visa_index_data
+373 |                     })
+374 |                 ivisa_data = self.scrape_ivisa(destination_country, passport_country)
+375 |                 if ivisa_data and 'error' not in ivisa_data:
+376 |                     source_data.append({
+377 |                         'source': 'ivisa',
+378 |                         'data': ivisa_data
+379 |                     })
+380 |                 government_data = self.scrape_government_visa(destination_country, passport_country)
+381 |                 if government_data and 'error' not in government_data:
+382 |                     source_data.append({
+383 |                         'source': 'government',
+384 |                         'data': government_data
+385 |                     })
+386 |                 
+387 |                 return {
+388 |                     'destination_country': destination_country,
+389 |                     'passport_country': passport_country,
+390 |                     'sources': source_data,
+391 |                     'scraped_at': time.strftime('%Y-%m-%d %H:%M:%S'),
+392 |                     'total_sources': len(source_data)
+393 |                 }
+394 | 
+395 |             def scrape_visa_index (self, destination_country: str, passport_country: str) -> Dict[str, Any]:
+396 |                 """Scrapes visa requirements from Visa Index"""
+397 | 
+398 |                 try:
+399 |                     url = f"https://visaindex.com/visa/{destination_country}-visa/"
+400 |                     response = self.session.get(url, timeout=15)
+401 |                     response.raise_for_status()
+402 | 
+403 |                     soup = BeautifulSoup(response.text, 'html.parser')
+404 | inputs
+405 |     prompt_input.py
+406 |         from langchain_core.prompts import PromptTemplate
+407 | 
+408 |         def build_prompt():
+409 |             prompt = PromptTemplate(
+410 |                 template="""
+411 |                 I'm planning a {duration} day trip to {destination} with {traveler_type} for a {interests} vacation.
+412 |                 """,
+413 |                 input_variables=['duration', 'destination', 'traveler_type', 'interests']
+414 |             )
+415 | 
+416 |             return prompt
+417 | models
+418 |     llm_generator.py
+419 | 
+420 |     from langchain_openai import AzureChatOpenAI
+421 |     from dotenv import load_dotenv
+422 |     import os
+423 | 
+424 |     load_dotenv()
+425 | 
+426 |     key = os.getenv("AZURE_OPENAI_API_KEY")
+427 |     endpoint = os.getenv("AZURE_OPENAI_API_ENDPOINT")
+428 |     version = os.getenv("AZURE_OPENAI_API_VERSION")
+429 | 
+430 |     def build_llm() :
+431 |         llm = AzureChatOpenAI (
+432 |             api_key=key,
+433 |             azure_endpoint=endpoint,
+434 |             api_version=version,
+435 |             deployment_name="gpt-4o",
+436 |             temperature=1
+437 |         )
+438 |         
+439 |         return llm
+440 | 
+441 | main.py
+442 | 
+443 |     import streamlit as st
+444 |     from inputs.prompt_input import build_prompt
+445 |     from agents.input_parser import TravelQuery
+446 |     from models.llm_generator import build_llm
+447 |     from langchain_core.output_parsers import StrOutputParser
+448 | 
+449 |     llm = build_llm()
+450 |     structured_model = llm.with_structured_output(TravelQuery)
+451 |     parser = StrOutputParser()
+452 |     prompt = build_prompt()
+453 | 
+454 |     input_text = st.text_input("Enter the Input")
+455 | 
+456 |     if input_text:
+457 |         with st.spinner("Generating your itenary......"):
+458 |             structured_result = structured_model.invoke(input_text)
+459 | 
+460 |             travel_dict = dict(structured_result)
+461 |             print(travel_dict['traveler_type'])
+462 |             print(structured_result)
+463 |             chain = prompt | llm | parser
+464 |             result = chain.invoke(travel_dict)
+465 | 
+466 |             st.markdown(result)
 
-    key = os.getenv("AZURE_OPENAI_API_KEY")
-    endpoint = os.getenv("AZURE_OPENAI_API_ENDPOINT")
-    version = os.getenv("AZURE_OPENAI_API_VERSION")
 
-    def build_llm() :
-        llm = AzureChatOpenAI (
-            api_key=key,
-            azure_endpoint=endpoint,
-            api_version=version,
-            deployment_name="gpt-4o",
-            temperature=1
-        )
-        
-        return llm
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/test_api.py:
+--------------------------------------------------------------------------------
+ 1 | from tools.api_caller import APICaller
+ 2 | from tools.web_scrapper import LLMWebScrapper
+ 3 | 
+ 4 | api = APICaller()
+ 5 | 
+ 6 | # print("Weather API")
+ 7 | # weather_data = api.get_weather_forecast("Delhi")
+ 8 | # print ("weather Data: ", weather_data)
+ 9 | 
+10 | # print("flight API")
+11 | # flight_data = api.find_flights("DEL", "LHR")
+12 | # print("flight data:", flight_data)
+13 | 
+14 | print("\nVisa Scraper")
+15 | scraper = LLMWebScrapper()
+16 | visa_data = scraper.scrape_visa_requirements(destination_country="nice", passport_country="delhi")
+17 | # flight_data = api.plan_flights("delhi", "london")
+18 | # print("Testing Delhi airports:")
+19 | # delhi_airports = api.get_iata_codes_for_city("delhi")
+20 | # print("Delhi airports found:", delhi_airports)
+21 | print("Visa Data:", visa_data)
+22 | # print("flight Data:", flight_data)
+23 | 
+24 | 
 
-main.py
 
-    import streamlit as st
-    from inputs.prompt_input import build_prompt
-    from agents.input_parser import TravelQuery
-    from models.llm_generator import build_llm
-    from langchain_core.output_parsers import StrOutputParser
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/tools/__pycache__/api_caller.cpython-312.pyc:
+--------------------------------------------------------------------------------
+https://raw.githubusercontent.com/Sambhavjain1010/Travel_AgenticAI/2a772e644ad7733acd5396474adbf7b6debd230d/Travel_agenticAI/Travel_agenticAI/tools/__pycache__/api_caller.cpython-312.pyc
 
-    llm = build_llm()
-    structured_model = llm.with_structured_output(TravelQuery)
-    parser = StrOutputParser()
-    prompt = build_prompt()
 
-    input_text = st.text_input("Enter the Input")
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/tools/__pycache__/web_scrapper.cpython-312.pyc:
+--------------------------------------------------------------------------------
+https://raw.githubusercontent.com/Sambhavjain1010/Travel_AgenticAI/2a772e644ad7733acd5396474adbf7b6debd230d/Travel_agenticAI/Travel_agenticAI/tools/__pycache__/web_scrapper.cpython-312.pyc
 
-    if input_text:
-        with st.spinner("Generating your itenary......"):
-            structured_result = structured_model.invoke(input_text)
 
-            travel_dict = dict(structured_result)
-            print(travel_dict['traveler_type'])
-            print(structured_result)
-            chain = prompt | llm | parser
-            result = chain.invoke(travel_dict)
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/tools/api_caller.py:
+--------------------------------------------------------------------------------
+  1 | # weather and flight APIs are working, rest are not working
+  2 | import requests
+  3 | import json
+  4 | import os
+  5 | from typing import Dict, Optional, Any
+  6 | from datetime import datetime, timedelta
+  7 | import airportsdata
+  8 | from dotenv import load_dotenv
+  9 | 
+ 10 | load_dotenv()
+ 11 | 
+ 12 | class APICallerError(Exception):
+ 13 |     """Custom exception for API caller errors"""
+ 14 |     pass
+ 15 | 
+ 16 | class APICaller:
+ 17 |     def __init__(self):
+ 18 |         self.openweather_api_key = os.getenv("OPENWEATHER_API_KEY")
+ 19 |         self.aviationstack_api_key = os.getenv("AVIATIONSTACK_API_KEY")
+ 20 |         self.aviationstack_api_endpoint = os.getenv("AVIATIONSTACK_API_ENDPOINT")
+ 21 |         self.airports_iata = airportsdata.load('IATA')
+ 22 | 
+ 23 |     def get_weather_forecast(self, city:str, days:int = 5) -> Dict[str, Any]:
+ 24 |         """Get weather forecast for a city"""
+ 25 | 
+ 26 |         try:
+ 27 |             url = "http://api.openweathermap.org/data/2.5/forecast"
+ 28 |             params = {
+ 29 |                 'q': city,
+ 30 |                 'appid': self.openweather_api_key,
+ 31 |                 'units': 'metric',
+ 32 |                 'cnt': min(days * 8, 40)
+ 33 |             }
+ 34 | 
+ 35 |             response = requests.get(url, params=params)
+ 36 |             response.raise_for_status()
+ 37 | 
+ 38 |             data = response.json()
+ 39 |             forecasts = []
+ 40 |             daily_forecasts = {}
+ 41 | 
+ 42 |             for item in data['list']:
+ 43 |                 date = item['dt_txt'].split(' ')[0]  
+ 44 |                 if date not in daily_forecasts:
+ 45 |                     daily_forecasts[date] = []
+ 46 |                 daily_forecasts[date].append(item)
+ 47 | 
+ 48 |             for date, day_forecasts in list(daily_forecasts.items())[:days]:  
+ 49 |                 midday_forecast = None
+ 50 |                 for forecast in day_forecasts:
+ 51 |                     if '12:00:00' in forecast['dt_txt']:
+ 52 |                         midday_forecast = forecast
+ 53 |                         break
+ 54 |                 
+ 55 |                 if not midday_forecast:
+ 56 |                     midday_forecast = day_forecasts[0]
+ 57 |                 
+ 58 |                 forecasts.append({
+ 59 |                     'date': date,
+ 60 |                     'datetime': midday_forecast['dt_txt'],
+ 61 |                     'temperature': midday_forecast['main']['temp'],
+ 62 |                     'feels_like': midday_forecast['main']['feels_like'],
+ 63 |                     'humidity': midday_forecast['main']['humidity'],
+ 64 |                     'description': midday_forecast['weather'][0]['description'].title(),
+ 65 |                     'main': midday_forecast['weather'][0]['main'],
+ 66 |                     'wind_speed': midday_forecast.get('wind', {}).get('speed', 'N/A'),
+ 67 |                     'clouds': midday_forecast.get('clouds', {}).get('all', 'N/A')
+ 68 |                 })
+ 69 |             
+ 70 |             return {
+ 71 |                 'city': city,
+ 72 |                 'country': data['city']['country'],
+ 73 |                 'timezone': data['city']['timezone'],
+ 74 |                 'forecasts': forecasts,
+ 75 |                 'total_forecasts': len(forecasts)
+ 76 |             }
+ 77 |         except Exception as e:
+ 78 |             return {
+ 79 |                 'city': city,
+ 80 |                 'error': f"Could not fetch weather info: {str(e)}",
+ 81 |                 'forecasts': []
+ 82 |             }
+ 83 |         
+ 84 |     def find_flights(self, origin: str, destination: str, departure_date: str = None,
+ 85 |                      return_date: str = None, adults: int = 1) -> Dict[str, Any]:
+ 86 |         """Find flights between two locations"""
+ 87 |         try:
+ 88 |             url = f"{self.aviationstack_api_endpoint}/flights"
+ 89 |             params = {
+ 90 |                 'access_key': self.aviationstack_api_key,
+ 91 |                 'dep_iata': origin,
+ 92 |                 'arr_iata': destination,
+ 93 |                 'limit': 10
+ 94 |             }
+ 95 | 
+ 96 |             if departure_date:
+ 97 |                 params['flight_date'] = departure_date
+ 98 |             
+ 99 |             response = requests.get(url, params=params)
+100 |             response.raise_for_status()
+101 | 
+102 |             data = response.json()
+103 |             flights = []
+104 |             
+105 |             if not data.get('data'):
+106 |                 return {
+107 |                     'origin': origin,
+108 |                     'destination': destination,
+109 |                     'flights': [],
+110 |                     'error': 'No flights found for the specified route',
+111 |                     'suggestions': 'Try checking major airport codes or different dates'
+112 |                 }
+113 |             for flight in data['data'][:5]:
+114 |                 airline = flight.get('airline') or {}
+115 |                 flight_info = {
+116 |                     'flight_number': f"{airline.get('iata', 'N/A')}{(flight.get('flight') or {}).get('number', '')}",
+117 |                     'airline': airline.get('name', 'Unknown'),
+118 |                     'aircraft': (flight.get('aircraft') or {}).get('registration', 'N/A'),
+119 |                     'departure': {
+120 |                         'airport': (flight.get('departure') or {}).get('airport', 'N/A'),
+121 |                         'scheduled': (flight.get('departure') or {}).get('scheduled', 'N/A'),
+122 |                         'estimated': (flight.get('departure') or {}).get('estimated', 'N/A'),
+123 |                         'terminal': (flight.get('departure') or {}).get('terminal', 'N/A'),
+124 |                         'gate': (flight.get('departure') or {}).get('gate', 'N/A')
+125 |                     },
+126 |                     'arrival': {
+127 |                         'airport': (flight.get('arrival') or {}).get('airport', 'N/A'),
+128 |                         'scheduled': (flight.get('arrival') or {}).get('scheduled', 'N/A'),
+129 |                         'estimated': (flight.get('arrival') or {}).get('estimated', 'N/A'),
+130 |                         'terminal': (flight.get('arrival') or {}).get('terminal', 'N/A'),
+131 |                         'gate': (flight.get('arrival') or {}).get('gate', 'N/A')
+132 |                     },
+133 |                     'status': flight.get('flight_status', 'Unknown')
+134 |                 }
+135 |                 flights.append(flight_info)
+136 | 
+137 |             return {
+138 |                 'origin': origin,
+139 |                 'destination': destination,
+140 |                 'flights': flights,
+141 |                 'search_date': departure_date or 'Live data',
+142 |                 'note': 'Live flight tracking data'
+143 |             }
+144 |         except Exception as e:
+145 |             return {
+146 |                 'origin': origin,
+147 |                 'destination': destination,
+148 |                 'error': f"Could not fetch flight details {str(e)}",
+149 |                 'flights': [],
+150 |                 'suggestion': 'Please verify airport codes and try again'
+151 |             }
+152 |         
+153 |     def get_route_flights(self, origin: str, destination: str) -> Dict[str, Any]:
+154 |         """Get route information between airports using AviationStack"""
+155 |         try:
+156 |             url = f"{self.aviationstack_api_endpoint}/routes"
+157 |             
+158 |             params = {
+159 |                 'access_key': self.aviationstack_api_key,
+160 |                 'dep_iata': origin,
+161 |                 'arr_iata': destination
+162 |             }
+163 |             
+164 |             response = requests.get(url, params=params)
+165 |             response.raise_for_status()
+166 |             
+167 |             data = response.json()
+168 |             
+169 |             if not data.get('data'):
+170 |                 return {
+171 |                     'origin': origin,
+172 |                     'destination': destination,
+173 |                     'routes': [],
+174 |                     'message': 'No routes found between these airports'
+175 |                 }
+176 |             
+177 |             routes = []
+178 |             for route in data['data']:
+179 |                 route_info = {
+180 |                     'airline': route.get('airline_name', 'Unknown'),
+181 |                     'airline_iata': route.get('airline_iata', 'N/A'),
+182 |                     'flight_number': route.get('flight_number', 'N/A'),
+183 |                     'departure_airport': route.get('dep_airport', 'N/A'),
+184 |                     'arrival_airport': route.get('arr_airport', 'N/A')
+185 |                 }
+186 |                 routes.append(route_info)
+187 |             
+188 |             return {
+189 |                 'origin': origin,
+190 |                 'destination': destination,
+191 |                 'routes': routes,
+192 |                 'total_routes': len(routes)
+193 |             }
+194 |         except Exception as e:
+195 |             return {
+196 |                 'origin': origin,
+197 |                 'destination': destination,
+198 |                 'error': f"Could not fetch route info: {str(e)}",
+199 |                 'routes': []
+200 |             }
+201 |         
+202 |     def get_iata_codes_for_city(self, city: str, country: str = None, max_results: int = 3) -> list:
+203 |         """Get IATA codes for a city using offline database"""
+204 |         matching_airports = []
+205 |         
+206 |         for iata_code, airport_data in self.airports_iata.items():
+207 |             # Match by city name
+208 |             if (city.lower() in airport_data.get('city', '').lower() or 
+209 |                 city.lower() in airport_data.get('name', '').lower()):
+210 |                 
+211 |                 # Filter by country if specified
+212 |                 if country and country.lower() != airport_data.get('country', '').lower():
+213 |                     continue
+214 |                 
+215 |                 matching_airports.append({
+216 |                     'airport_name': airport_data.get('name'),
+217 |                     'iata_code': iata_code,
+218 |                     'city': airport_data.get('city'),
+219 |                     'country': airport_data.get('country')
+220 |                 })
+221 |                 
+222 |                 if len(matching_airports) >= max_results:
+223 |                     break
+224 |         
+225 |         return matching_airports
+226 |         
+227 |     def get_main_iata_for_place(self, place: str, country=None):
+228 |         """Get primary IATA code for a city or place"""
+229 |         # Enhanced fallback mapping for major cities
+230 |         CITY_TO_IATA = {
+231 |             'delhi': 'DEL',
+232 |             'new delhi': 'DEL',
+233 |             'london': 'LHR',
+234 |             'mumbai': 'BOM',
+235 |             'chennai': 'MAA',
+236 |             'bangalore': 'BLR',
+237 |             'bengaluru': 'BLR',
+238 |             'kolkata': 'CCU',
+239 |             'paris': 'CDG',
+240 |             'new york': 'JFK',
+241 |             'los angeles': 'LAX',
+242 |             'tokyo': 'NRT',
+243 |             'dubai': 'DXB',
+244 |             'singapore': 'SIN',
+245 |             'hong kong': 'HKG',
+246 |             'amsterdam': 'AMS',
+247 |             'frankfurt': 'FRA',
+248 |             'madrid': 'MAD',
+249 |             'rome': 'FCO',
+250 |             'sydney': 'SYD',
+251 |             'melbourne': 'MEL',
+252 |             'toronto': 'YYZ',
+253 |             'vancouver': 'YVR',
+254 |             'beijing': 'PEK',
+255 |             'shanghai': 'PVG',
+256 |             'seoul': 'ICN',
+257 |             'bangkok': 'BKK',
+258 |             'kuala lumpur': 'KUL',
+259 |             'istanbul': 'IST',
+260 |             'cairo': 'CAI',
+261 |             'johannesburg': 'JNB',
+262 |             'sao paulo': 'GRU',
+263 |             'mexico city': 'MEX',
+264 |             'montreal': 'YUL'
+265 |         }
+266 |         
+267 |         place_lower = place.lower().strip()
+268 |         
+269 |         # Try fallback mapping first
+270 |         if place_lower in CITY_TO_IATA:
+271 |             print(f"📍 Using fallback: {place} -> {CITY_TO_IATA[place_lower]}")
+272 |             return CITY_TO_IATA[place_lower]
+273 |         
+274 |         # Search in offline database
+275 |         airports = self.get_iata_codes_for_city(place, country)  # FIXED: use correct method name
+276 |         if airports:
+277 |             print(f"📍 Found from database: {place} -> {airports[0]['iata_code']}")
+278 |             return airports['iata_code']  # FIXED: return the iata_code from the first airport
+279 |         
+280 |         print(f"❌ No IATA code found for: {place}")
+281 |         return None
+282 | 
+283 | 
+284 |     def plan_flights(self, origin_place, dest_place, departure_date=None, return_date=None):
+285 |         origin_code = self.get_main_iata_for_place(origin_place)
+286 |         dest_code = self.get_main_iata_for_place(dest_place)
+287 |         if not origin_code or not dest_code:
+288 |             return {
+289 |                 "error": f"Could not resolve airport codes for '{origin_place}' or '{dest_place}'"
+290 |             }
+291 |         return self.find_flights(origin=origin_code, destination=dest_code, departure_date=departure_date, return_date=return_date)
+292 | 
 
-            st.markdown(result)
+
+--------------------------------------------------------------------------------
+/Travel_agenticAI/Travel_agenticAI/tools/web_scrapper.py:
+--------------------------------------------------------------------------------
+  1 | # api calling not working for visa requirements and safety ratings, I can use web scraping for that
+  2 | from fileinput import filename
+  3 | import requests
+  4 | from bs4 import BeautifulSoup
+  5 | import os
+  6 | import json
+  7 | import time
+  8 | from typing import Dict, Any
+  9 | from models.llm_generator import build_llm
+ 10 | from data.visa_data_class import ExtractedVisaInfo
+ 11 | from selenium import webdriver
+ 12 | from selenium.webdriver.support.ui import Select
+ 13 | from selenium.webdriver.common.by import By
+ 14 | from selenium.webdriver.support.ui import WebDriverWait
+ 15 | from selenium.webdriver.support import expected_conditions as EC
+ 16 | from geopy.geocoders import Nominatim
+ 17 | 
+ 18 | class LLMWebScrapper:
+ 19 | 
+ 20 |     def __init__(self):
+ 21 |         self.headers = {
+ 22 |             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
+ 23 |         }
+ 24 | 
+ 25 |         self.session = requests.Session()
+ 26 |         self.session.headers.update(self.headers)
+ 27 |         self.llm = build_llm()
+ 28 |         self.structured_visa_llm = self.llm.with_structured_output(ExtractedVisaInfo)
+ 29 | 
+ 30 |         self.chrome_options = webdriver.ChromeOptions()
+ 31 |         self.chrome_options.add_argument('--headless')
+ 32 |         self.chrome_options.add_argument('--no-sandbox')
+ 33 |         self.chrome_options.add_argument('--disable-dev-shm-usage')
+ 34 |         self.chrome_options.add_argument('--disable-gpu')
+ 35 |         self.chrome_options.add_argument('--disable-extensions')
+ 36 |         self.chrome_options.add_argument('--disable-logging')
+ 37 |         # self.chrome_options.add_argument('--start-maximized')
+ 38 |         self.chrome_options.add_argument('--disable-web-security')
+ 39 |         self.chrome_options.add_argument('--allow-running-insecure-content')
+ 40 |         self.chrome_options.add_argument(f"user-agent={self.headers['User-Agent']}")
+ 41 |         self.chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+ 42 |         self.chrome_options.add_experimental_option('useAutomationExtension', False)
+ 43 |     
+ 44 |     # Main callable function that inturn calls the other 2 functions
+ 45 |     def scrape_visa_requirements(self, destination_country: str, passport_country: str = "India") -> Dict[str, Any]:
+ 46 |         
+ 47 |         source_data = []
+ 48 |         filename = f"scraped_data/visa_requirements.json"
+ 49 | 
+ 50 |         # resolving the country name if the city name is given
+ 51 |         dest_input = destination_country.strip()
+ 52 |         dest_country = self.city_to_country(dest_input)
+ 53 |         origin_country = self.city_to_country(passport_country.strip())
+ 54 | 
+ 55 |         # checking the previously cached data
+ 56 |         cached_data = self.load_visa_info_from_cache(filename, dest_country)
+ 57 |         if cached_data:
+ 58 |             return {
+ 59 |             'destination_country': destination_country,
+ 60 |             'passport_country': passport_country,
+ 61 |             'sources': {
+ 62 |                 "source": 'cached_data',
+ 63 |                 'data': cached_data
+ 64 |             },
+ 65 |             'scraped_at': cached_data.get('cached_at', 'Unknown'),
+ 66 |             'total_sources': len(source_data),
+ 67 |             'cache_hit': True
+ 68 |         }
+ 69 | 
+ 70 |         visa_index_data = self.scrape_visa_index(dest_country, origin_country)
+ 71 |         if visa_index_data and 'error' not in visa_index_data:
+ 72 |             source_data.append({
+ 73 |                 'source': 'visa_index_static',
+ 74 |                 'data': visa_index_data
+ 75 |             })
+ 76 |         interactive_visa_data = self.check_visa_requirements(dest_country, origin_country)
+ 77 |         if interactive_visa_data and 'error' not in interactive_visa_data:
+ 78 |             source_data.append({
+ 79 |                 'source': 'visa_index_interactive',
+ 80 |                 'data': interactive_visa_data
+ 81 |             })
+ 82 | 
+ 83 |         return {
+ 84 |             'destination_country': destination_country,
+ 85 |             'passport_country': passport_country,
+ 86 |             'sources': source_data,
+ 87 |             'scraped_at': time.strftime('%Y-%m-%d %H:%M:%S'),
+ 88 |             'total_sources': len(source_data)
+ 89 |         }
+ 90 | 
+ 91 |     def scrape_visa_index (self, dest_country: str, origin_country: str) -> Dict[str, Any]:
+ 92 |         
+ 93 |         output_dir = "scraped_data"
+ 94 |         os.makedirs(output_dir, exist_ok=True)
+ 95 |         filename = f"{output_dir}/visa_requirements.json"
+ 96 |         
+ 97 |         try:
+ 98 |             
+ 99 |             country_slug = None
+100 |             if dest_country.lower() in ["united kingdom", "uk", "britain"]:
+101 |                 country_slug = "uk"
+102 |             elif dest_country.lower() in ["united states", "united states of america", "usa", "us"]:
+103 |                 country_slug = "us"
+104 |             elif dest_country.lower() in ["united arab emirates", "uae"]:
+105 |                 country_slug = "uae"
+106 |             else:
+107 |                 country_slug = dest_country.lower().replace(" ", "-")
+108 | 
+109 |             url = f"https://visaindex.com/visa/{country_slug}-visa/"
+110 |             response = self.session.get(url, timeout=15)
+111 |             response.raise_for_status()
+112 | 
+113 |             soup = BeautifulSoup(response.text, 'html.parser')
+114 |             for element in soup(['script', 'style', 'nav', 'footer']):
+115 |                 element.decompose()
+116 |             
+117 |             page_content = soup.get_text(separator='\n', strip=True)
+118 | 
+119 |             print("Processing content with LLM...")
+120 |             visa_info = self.structured_visa_llm.invoke(f"""
+121 |             Extract visa requirement information for {origin_country} citizens traveling to {dest_country} from this webpage content:
+122 |             
+123 |             {page_content}
+124 |             
+125 |             Focus on:
+126 |             - Visa requirement type (visa free, visa on arrival, e-visa, visa required)
+127 |             - Maximum stay duration
+128 |             - Processing time and requirements
+129 |             - Any special conditions or restrictions
+130 |             """)
+131 | 
+132 |             visa_info_dict = visa_info.dict() if hasattr(visa_info, 'dict') else dict(visa_info)
+133 |             
+134 |             country_key = dest_country
+135 |             self.save_visa_info(filename, country_key, visa_info_dict)
+136 | 
+137 |             return visa_info_dict
+138 |         
+139 |         except Exception as e:
+140 |             print(f"ERROR in scrape_visa_index: {e}")
+141 |             return {'error': f'VisaIndex scraping failed {str(e)}'}
+142 |     
+143 |     def check_visa_requirements(self, dest_country: str, origin_country: str) -> Dict[str, Any]:
+144 | 
+145 |         driver = webdriver.Chrome(options=self.chrome_options)
+146 |         
+147 |         try:
+148 |             url = f"https://visaindex.com/"
+149 |             driver.get(url)
+150 |             wait = WebDriverWait(driver, 10)
+151 |             try: 
+152 |                 initial_button = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/div/div[2]/button")))
+153 |                 initial_button.click()
+154 |             except Exception as e:
+155 |                 print(f"ERROR in check_visa_requirements: {e}")
+156 |                 print("Initial pop-up button not found or not needed.")
+157 | 
+158 |             passport_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "passport_to")))
+159 |             select_passport = Select(passport_dropdown)
+160 |             select_passport.select_by_visible_text(origin_country)
+161 | 
+162 |             destination_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "passport_from")))
+163 |             select_destination = Select(destination_dropdown)
+164 |             select_destination.select_by_visible_text(dest_country)
+165 | 
+166 |             submit_button = driver.find_element(By.XPATH, "/html/body/div[4]/div/div[2]/div[3]/button")
+167 |             submit_button.click()
+168 | 
+169 |             time.sleep(8)
+170 | 
+171 |             visa_page_source = driver.page_source
+172 |             soup = BeautifulSoup(visa_page_source, 'html.parser')
+173 | 
+174 |             for element in soup(['script', 'style', 'nav', 'footer', 'header']):
+175 |                 element.decompose()
+176 |         
+177 |             content_text = soup.get_text(separator='\n', strip=True)
+178 | 
+179 |             visa_info = self.structured_visa_llm.invoke(f"""
+180 |             Extract visa requirement information for {origin_country} citizens traveling to {dest_country} from this webpage:
+181 |             {content_text}
+182 |             """)
+183 |             
+184 |             return visa_info.dict()
+185 |         except Exception as e:
+186 |             print(f"ERROR in check_visa_requirements: {e}")
+187 |             return {'error': f'VisaIndex (interactive) scraping failed: {str(e)}'}
+188 |         finally:
+189 |             driver.quit()
+190 | 
+191 |     def save_visa_info(self, filename, country_key, visa_info_dict):
+192 | 
+193 |         if os.path.exists(filename):
+194 |             with open(filename, 'r', encoding='utf-8') as f:
+195 |                 try:
+196 |                     data_cache = json.load(f)
+197 |                 except Exception:
+198 |                     data_cache = {}
+199 |         else:
+200 |             data_cache = {}
+201 | 
+202 |         country_key_lc = country_key.strip().lower()
+203 |         if country_key_lc not in data_cache:
+204 |             data_cache[country_key_lc] = visa_info_dict
+205 | 
+206 |             with open(filename, 'w', encoding='utf-8') as f:
+207 |                 json.dump(data_cache, f, ensure_ascii=False, indent=4)
+208 |         else:
+209 |             print(f"Data for {country_key_lc} already present—no write needed.")
+210 | 
+211 |     def city_to_country(self, city_input: str) -> str:
+212 |         geolocator = Nominatim(user_agent="my_travel_agent")
+213 |     
+214 |     # Check if input contains multiple cities (comma-separated)
+215 |         if ',' in city_input:
+216 |             cities = [city.strip() for city in city_input.split(',')]
+217 |             countries = []
+218 |             
+219 |             for city in cities:
+220 |                 location = geolocator.geocode(city, addressdetails=True, language='en')
+221 |                 if location and 'country' in location.raw['address']:
+222 |                     country = location.raw['address']['country']
+223 |                     countries.append(country)
+224 |                 else:
+225 |                     countries.append(city)  # fallback to input city
+226 |             
+227 |             # Return the most common country (since all cities are in same country)
+228 |             # Or return first country if all are the same
+229 |             unique_countries = list(set(countries))
+230 |             if len(unique_countries) == 1:
+231 |                 return unique_countries[0]
+232 |             else:
+233 |                 # Multiple countries - return the first one or handle as needed
+234 |                 return unique_countries
+235 |         
+236 |         else:
+237 |             # Single city - existing logic
+238 |             location = geolocator.geocode(city_input, addressdetails=True, language='en')
+239 |             if location and 'country' in location.raw['address']:
+240 |                 return location.raw['address']['country']
+241 |             return city_input
+242 |     
+243 |     def load_visa_info_from_cache(self, filename, country_key):
+244 |         """Load visa info from cache if it exists"""
+245 |         if not os.path.exists(filename):
+246 |             return None
+247 |         
+248 |         try:
+249 |             with open(filename, 'r', encoding='utf-8') as f:
+250 |                 data_cache = json.load(f)
+251 |             
+252 |             country_key_lc = country_key.strip().lower()
+253 |             
+254 |             if country_key_lc in data_cache:
+255 |                 print(f"Found cached visa data for: {country_key}")
+256 |                 return data_cache[country_key_lc]
+257 |             else:
+258 |                 return None
+259 |                 
+260 |         except Exception as e:
+261 |             print(f"Error reading cache: {e}")
+262 |             return None
